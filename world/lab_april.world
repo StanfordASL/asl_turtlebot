@@ -173,7 +173,7 @@
     </model>
     <model name='box_april_tag'>
       <pose frame=''>0.443863 -1.47776 1 0 -0 0</pose>
-      <static>0</static>
+      <static>1</static>
       <link name='link'>
         <collision name='collision'>
           <geometry>
