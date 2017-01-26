@@ -40,12 +40,14 @@
     <param name="projected_optics" type="bool" value="true" />
 
     <!-- Describe the tags -->
-    <rosparam param="tag_descriptions">[{id: 0, size: 0.6}]
+    <rosparam param="tag_descriptions">[{id: 0, size: 0.4}]
     </rosparam>
   </node>
 
   <node pkg="image_view" type="image_view" name="tag_viewer">
     <remap from="image" to="/tag_detections_image" />
   </node>
+
+  <node pkg="tf" type="static_transform_publisher" name="camera_static_tf" args="0.0 0.0 .25 0.5 -0.5 0.5 -0.5 /mobile_base /camera_depth_optical_frame 100"/>
 
 </launch>
