@@ -8,7 +8,7 @@
 
   <!-- Gazebo model spawner -->
   <node name="spawn_turtlebot_model" pkg="gazebo_ros" type="spawn_model"
-        args="-x '1.0' -y '-0.5' -Y '2.07' -unpause -urdf -param robot_description -model mobile_base"/>
+        args="-x '1.0' -y '-0.5' -Y '0.0' -unpause -urdf -param robot_description -model mobile_base"/>
 
   <!-- Velocity muxer -->
   <node pkg="nodelet" type="nodelet" name="mobile_base_nodelet_manager" args="manager"/>
