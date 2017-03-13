@@ -1,0 +1,72 @@
+<launch>
+
+    <arg name="scan_topic"  default="scan" />
+    <arg name="base_frame"  default="base_footprint"/>
+    <arg name="odom_frame"  default="odom"/>
+
+    <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
+        <param name="base_frame" value="$(arg base_frame)"/>
+        <param name="odom_frame" value="$(arg odom_frame)"/>
+        <param name="throttle_scans" value="1"/>
+        <param name="map_update_interval" value="1.0"/>
+        <param name="maxUrange" value="6.0"/>
+        <param name="maxRange" value="8.0"/>
+        <param name="sigma" value="0.05"/>
+        <param name="kernelSize" value="1"/>
+        <param name="lstep" value="0.05"/>
+        <param name="astep" value="0.05"/>
+        <param name="iterations" value="5"/>
+        <param name="lsigma" value="0.075"/>
+        <param name="ogain" value="3.0"/>
+        <param name="lskip" value="0"/>
+        <param name="minimumScore" value="100"/>
+        <param name="srr" value="0.01"/>
+        <param name="srt" value="0.02"/>
+        <param name="str" value="0.01"/>
+        <param name="stt" value="0.02"/>
+        <param name="linearUpdate" value="0.1"/>
+        <param name="angularUpdate" value="0.1"/>
+        <param name="temporalUpdate" value="0.5"/>
+        <param name="resampleThreshold" value="0.5"/>
+        <param name="particles" value="100"/>
+        <param name="xmin" value="-5.0"/>
+        <param name="ymin" value="-5.0"/>
+        <param name="xmax" value="5.0"/>
+        <param name="ymax" value="5.0"/>
+
+        <param name="delta" value="0.025"/>
+        <param name="llsamplerange" value="0.01"/>
+        <param name="llsamplestep" value="0.01"/>
+        <param name="lasamplerange" value="0.005"/>
+        <param name="lasamplestep" value="0.005"/>
+        <remap from="scan" to="$(arg scan_topic)"/>
+    </node>
+
+    <node pkg="apriltags_ros" type="apriltag_detector_node" name="apriltag_detector" output="screen">
+        <!-- Remap topic required by the node to custom topics -->
+        <remap from="image_rect" to="/camera/rgb/image_raw" />
+        <remap from="camera_info" to="/camera/rgb/camera_info" />
+
+        <!-- Optional: Subscribe to the compressed stream-->
+        <param name="image_transport" type="str" value="compressed" />
+
+        <!-- Select the tag family: 16h5, 25h7, 25h9, 36h9, or 36h11(default) -->
+        <param name="tag_family" type="str" value="36h11" />
+
+        <!-- Enable projected optical measurements for more accurate tag transformations -->
+        <!-- This exists for backwards compatability and should be left true for new setups -->
+        <param name="projected_optics" type="bool" value="true" />
+
+        <!-- Describe the tags -->
+        <rosparam param="tag_descriptions">[{id: 0, size: 0.1615, frame_id: tag_0},
+                                            {id: 1, size: 0.1615, frame_id: tag_1},
+                                            {id: 2, size: 0.1615, frame_id: tag_2},
+                                            {id: 3, size: 0.1615, frame_id: tag_3},
+                                            {id: 4, size: 0.1615, frame_id: tag_4},
+                                            {id: 5, size: 0.1615, frame_id: tag_5},
+                                            {id: 6, size: 0.1615, frame_id: tag_6},
+                                            {id: 7, size: 0.1615, frame_id: tag_7}]
+        </rosparam>
+    </node>
+
+</launch>
