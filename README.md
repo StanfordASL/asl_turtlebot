@@ -2,6 +2,15 @@
 
 ## AA274 Project Notes
 
+### Simulation
+* To start up the gazebo simulation environment and rviz map visualization, simply run
+
+  ```bash
+  roslaunch asl_turtlebot turtlebot_project_sim.launch
+  ```
+
+### Hardware
+
 * Networking
   * To connect to the turtlebots in the ASL, you must be on the `NETGEAR19` wifi network (preferably `NETGEAR19-5G`, to avoid network outages when the microwave is running). The password is `turtlebot`.
   * If you are running Ubuntu within a virtual machine (i.e., the AA274 VM), you must change your VM network settings (found in the VM-specific settings, not the general VMware settings) to "Bridged Networking."
@@ -18,7 +27,7 @@
     * If you want to go back to testing in Gazebo and running the `roscore` locally in your VM, uncomment the last line.
   * Be sure to `source ~/.bashrc` after any changes!
 * Running gmapping onboard the turtlebot
-  * In terminal windows on the turtlebot laptop (or more conveniently for starting/stopping, through ssh terminals at `ssh turtlebot@192.168.1.22x`), run:
+  * In terminal windows on the turtlebot laptop (or more conveniently for starting/stopping, through ssh terminals at `ssh turtlebot@192.168.1.22x`, password `turtlebot`), run:
 
     ```bash
     roslaunch asl_turtlebot turtlebot_bringup.launch
