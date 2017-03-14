@@ -124,4 +124,6 @@
     <node pkg="tf" type="static_transform_publisher" name="camera_static_tf" args="0.0 0.0 .25 0.5 -0.5 0.5 -0.5 /mobile_base /camera_depth_optical_frame 100"/>
     <node pkg="tf" type="static_transform_publisher" name="footprint_static_tf" args="0.0 0.0 0.0 0.0 0.0 0.0 /base_footprint /mobile_base 100"/>
 
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find asl_turtlebot)/rviz/mission.rviz"/>
+
 </launch>
