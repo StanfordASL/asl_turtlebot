@@ -9,6 +9,12 @@
   roslaunch asl_turtlebot turtlebot_project_sim.launch
   ```
 
+* To run gazebo "headless" without actually displaying the simulation window (improves the simulation speed on old computers and enhances the realism of our "Mars" mission!), run
+
+  ```bash
+  roslaunch asl_turtlebot turtlebot_project_sim.launch gui:=false headless:=true
+  ```
+
 ### Hardware
 
 * Networking
