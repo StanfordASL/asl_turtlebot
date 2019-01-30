@@ -1,0 +1,32 @@
+ <launch>
+    <arg name="model" default="burger" doc="model type [burger, waffle]"/>
+    <arg name="x_pos" default="0.0"/>
+    <arg name="y_pos" default="0.0"/>
+    <arg name="z_pos" default="0.0"/>
+    <arg name="gui" default="false"/>
+    <rosparam param="sim">true</rosparam>
+    <rosparam param="map">false</rosparam>
+    <rosparam param="use_tf">false</rosparam>
+    <rosparam param="rviz">true</rosparam>
+
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="$(find asl_turtlebot)/world/signs.world"/>
+        <arg name="paused" value="false"/>
+        <arg name="use_sim_time" value="true"/>
+        <arg name="debug" value="false"/>
+        <arg name="gui" value="$(arg gui)"/>
+    </include>
+
+    <param name="robot_description" command="$(find xacro)/xacro.py $(find asl_turtlebot)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model turtlebot3_burger -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -param robot_description" />
+
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+        <param name="publish_frequency" type="double" value="10.0" />
+    </node>
+
+    <node pkg="asl_turtlebot" type="detector.py" name="turtlebot_detector" />
+    <node pkg="asl_turtlebot" type="pose_controller.py" name="turtlebot_pose_controller" />
+    <node pkg="asl_turtlebot" type="gazebo_plot.py" name="gazebo_plot" />
+
+</launch>

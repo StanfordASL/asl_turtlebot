@@ -1,0 +1,15 @@
+ <launch>
+    <arg name="model" default="burger" doc="model type [burger, waffle]"/>
+    <arg name="x_pos" default="0.0"/>
+    <arg name="y_pos" default="0.0"/>
+    <arg name="z_pos" default="0.0"/>
+    <arg name="gui" default="false"/>
+    <rosparam param="sim">true</rosparam>
+    <rosparam param="map">false</rosparam>
+    <rosparam param="use_tf">false</rosparam>
+    <rosparam param="rviz">true</rosparam>
+
+    <node pkg="asl_turtlebot" type="hw2_demo.py" name="turtlebot_pose_commander" />
+    <node pkg="asl_turtlebot" type="pose_controller.py" name="turtlebot_pose_controller" />
+
+</launch>
