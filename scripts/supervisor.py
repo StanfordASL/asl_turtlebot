@@ -245,7 +245,7 @@ class Supervisor:
             raise Exception('This mode is not supported: %s'
                 % str(self.mode))
 
-    ############ your code starts here ############
+    ############ your code ends here ############
 
     def run(self):
         rate = rospy.Rate(10) # 10 Hz
