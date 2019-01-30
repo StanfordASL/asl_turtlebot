@@ -4,7 +4,7 @@
     <arg name="y_pos" default="0.0"/>
     <arg name="z_pos" default="0.0"/>
     <arg name="gui" default="false"/>
-    <rosparam param="sim">true</rosparam>
+    <rosparam param="sim">false</rosparam>
     <rosparam param="map">false</rosparam>
     <rosparam param="use_tf">false</rosparam>
     <rosparam param="rviz">true</rosparam>
