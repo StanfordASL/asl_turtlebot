@@ -3,10 +3,16 @@
   <arg name="x_pos" default="0.0"/>
   <arg name="y_pos" default="0.0"/>
   <arg name="z_pos" default="0.0"/>
-  <arg name="gui" default="false"/>
-  <arg name="sim" default="true"/>
-  <arg name="map" default="true"/>
-  <arg name="use_tf" default="false"/>  
+  <arg name="gui" default="false"/> 
+
+
+<!-- FILL ROSPARAMS HERE -->
+  <rosparam param="sim"><!-- FILL YOUR PARAM IN HERE --></rosparam>
+  <rosparam param="map"><!-- FILL YOUR PARAM IN HERE --></rosparam>
+  <!-- tf here means tensorflow for object detection -->
+  <rosparam param="use_tf"><!-- FILL YOUR PARAM IN HERE --></rosparam>
+  <rosparam param="rviz"><!-- FILL YOUR PARAM IN HERE --></rosparam>
+<!-- YOUR CODE ENDS HERE -->
 
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(find asl_turtlebot)/world/signs_gmapping.world"/>
@@ -59,11 +65,9 @@
   </node>
 
   <node pkg="asl_turtlebot" type="detector.py" name="turtlebot_detector" />
-    <param name="use_tf" type="bool" value="$(arg use_tf)" />
-  <node pkg="asl_turtlebot" type="hw2_controller.py" name="turtlebot_pose_controller" />
-    <param name="sim" type="bool" value="$(arg sim)" />
-    <param name="map" type="bool" value="$(arg map)" />
+  <node pkg="asl_turtlebot" type="pose_controller.py" name="turtlebot_pose_controller" />
   <node pkg="asl_turtlebot" type="gazebo_plot.py" name="gazebo_plot" />
 
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find asl_turtlebot)/rviz/signs_gmapping.rviz"/>
   
 </launch>
