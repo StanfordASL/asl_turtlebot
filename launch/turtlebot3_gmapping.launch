@@ -1,8 +1,8 @@
-<launch>
-  <arg name="sim" default="false"/>
-  <arg name="map" default="true"/>
-  <arg name="use_tf" default="true"/>  
-
+<launch> 
+  <rosparam param="sim">false</rosparam>
+  <rosparam param="map">true</rosparam>
+  <rosparam param="use_tf">false</rosparam>
+  <rosparam param="rviz">true</rosparam>
 
 
   <node pkg="gmapping" type="slam_gmapping" name="turtlebot3_slam_gmapping" output="screen">
@@ -41,10 +41,9 @@
 
 
   <node pkg="asl_turtlebot" type="detector.py" name="turtlebot_detector" />
-    <param name="use_tf" type="bool" value="$(arg use_tf)" />
-  <node pkg="asl_turtlebot" type="hw2_controller.py" name="turtlebot_pose_controller" />
-    <param name="sim" type="bool" value="$(arg sim)" />
-    <param name="map" type="bool" value="$(arg map)" />
+  <node pkg="asl_turtlebot" type="pose_controller.py" name="turtlebot_pose_controller" />
   <node pkg="asl_turtlebot" type="gazebo_plot.py" name="gazebo_plot" />
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find asl_turtlebot)/rviz/signs_gmapping.rviz"/>
 
 </launch>
