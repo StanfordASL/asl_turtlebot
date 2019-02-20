@@ -62,13 +62,13 @@ class DetectorViz:
 
     def camera_common(self, img, img_bgr8):
         (img_h,img_w,img_c) = img.shape
-        draw_color = (255,0,0)
+        draw_color = (0,255,0)
         if self.detected_objects is not None:
             for ob_msg in self.detected_objects.ob_msgs:
                 ymin, xmin, ymax, xmax = [int(x) for x in ob_msg.corners]
                 cv2.rectangle(img_bgr8, (xmin,ymin), (xmax,ymax), draw_color, 2)
                 # cool add-on by student in 2018 class
-                cv2.putText(img_bgr8, ob_msg.name + ":" + str(round(ob_msg.confidence, 2)), (xmin, ymin-10), CV2_FONT, .5, draw_color)
+                cv2.putText(img_bgr8, ob_msg.name + ":" + str(round(ob_msg.confidence, 2)), (xmin, ymin+10), CV2_FONT, .5, draw_color)
             cv2.imshow("Camera", img_bgr8)
             cv2.waitKey(1)
 
