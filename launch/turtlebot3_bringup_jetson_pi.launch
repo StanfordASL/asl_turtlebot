@@ -2,8 +2,8 @@
     <include file="$(find turtlebot3_bringup)/launch/turtlebot3_core.launch" />
     <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch" />
 
-
-    <machine name="pi" address="turkey.local" env-loader="~/catkin_ws/devel/env_pi.sh" user="aa274" password="aa274" />
+    <!-- PU NAME OF YOUR PI HERE -->
+    <machine name="pi" address="<name of pi>.local" env-loader="~/catkin_ws/devel/env_pi.sh" user="aa274" password="aa274" />
 
 
 
