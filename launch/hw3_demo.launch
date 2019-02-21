@@ -1,13 +1,8 @@
-<launch> 
-  <!-- RUN ON LOCAL COMPUTER -->
-  <rosparam param="sim">false</rosparam>
-  <rosparam param="map">true</rosparam>
+ <launch>
+    <rosparam param="sim">false</rosparam>
+    <rosparam param="map">true</rosparam>
 
-
-  
-  <node pkg="asl_turtlebot" type="pose_controller.py" name="turtlebot_pose_controller" />
-  <!-- use rviz for goal position -->
-  <node pkg="asl_turtlebot" type="hw2_demo.py" name="goal_pose_commander" />  
-  <!-- <node pkg="asl_turtlebot" type="gazebo_plot.py" name="gazebo_plot" /> -->
+    <node pkg="asl_turtlebot" type="hw2_demo.py" name="turtlebot_pose_commander" />
+    <node pkg="asl_turtlebot" type="pose_controller.py" name="turtlebot_pose_controller" />
 
 </launch>
