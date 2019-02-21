@@ -2,6 +2,10 @@
 import rospy
 from geometry_msgs.msg import Pose2D, PoseStamped
 import tf
+
+# if using gmapping, you will have a map frame. otherwise it will be odom frame
+mapping = rospy.get_param("map")
+
 class GoalPoseCommander:
 
     def __init__(self):
@@ -20,7 +24,9 @@ class GoalPoseCommander:
         """ callback for a pose goal sent through rviz """
         rospy.loginfo("rviz command received!")
         try:
-            nav_pose_origin = self.trans_listener.transformPose("/odom", msg)
+            origin_frame = "/map" if mapping else "/odom"
+            rospy.loginfo("getting frame")
+            nav_pose_origin = self.trans_listener.transformPose(origin_frame, msg)
             self.x_g = nav_pose_origin.pose.position.x
             self.y_g = nav_pose_origin.pose.position.y
             quaternion = (
