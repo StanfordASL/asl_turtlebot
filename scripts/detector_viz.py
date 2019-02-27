@@ -13,6 +13,7 @@ import cv2
 import math
 
 CV2_FONT = cv2.FONT_HERSHEY_SIMPLEX
+BOX_TIMEOUT = 1.0
 
 class DetectorViz:
 
@@ -21,7 +22,7 @@ class DetectorViz:
         self.bridge = CvBridge()
 
         self.tf_listener = TransformListener()
-
+        self.last_box_time = rospy.get_rostime()
         rospy.Subscriber('/detector/objects', DetectedObjectList, self.detected_objects_name_callback, queue_size=10)
         self.detected_objects = None
         rospy.Subscriber('/camera_relay/image_raw', Image, self.camera_callback, queue_size=1, buff_size=2**24)
@@ -36,6 +37,7 @@ class DetectorViz:
     def detected_objects_name_callback(self, msg):
         rospy.loginfo("There are %i detected objects" % len(msg.objects))
         self.detected_objects = msg
+        self.last_box_time = rospy.get_rostime()
 
     def camera_callback(self, msg):
         """ callback for camera images """
@@ -45,6 +47,11 @@ class DetectorViz:
             img_bgr8 = self.bridge.imgmsg_to_cv2(msg, "bgr8")
         except CvBridgeError as e:
             print(e)
+        if (msg.header.stamp.to_sec() - self.last_box_time.to_sec()) > BOX_TIMEOUT:
+            self.detected_objects = None
+
+        if np.abs(rospy.get_rostime().to_sec() - self.last_box_time.to_sec()) > BOX_TIMEOUT:
+            self.detected_objects = None
 
         self.camera_common(img, img_bgr8)
 
@@ -57,6 +64,9 @@ class DetectorViz:
             img_bgr8 = self.bridge.compressed_imgmsg_to_cv2(msg, "bgr8")
         except CvBridgeError as e:
             print(e)
+
+        if np.abs(rospy.get_rostime().to_sec() - self.last_box_time.to_sec()) > BOX_TIMEOUT:
+            self.detected_objects = None
         self.camera_common(img, img_bgr8)
         
 
@@ -69,8 +79,9 @@ class DetectorViz:
                 cv2.rectangle(img_bgr8, (xmin,ymin), (xmax,ymax), draw_color, 2)
                 # cool add-on by student in 2018 class
                 cv2.putText(img_bgr8, ob_msg.name + ":" + str(round(ob_msg.confidence, 2)), (xmin, ymin+13), CV2_FONT, .5, draw_color)
-            cv2.imshow("Camera", img_bgr8)
-            cv2.waitKey(1)
+        cv2.imshow("Camera", img_bgr8)
+        cv2.waitKey(1)
+
 
     def run(self):
         rospy.spin()
