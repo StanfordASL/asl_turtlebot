@@ -46,7 +46,7 @@ scripts/navigator.py: Path planner that will use A* implementation (to be comple
 
 scripts/pose_controller.py: Pose controller from HW1.
 
-scripts/puddle_viz.py: Subscribes to the filtered velodyne points produced by velodyne_filter.launch (/velodyne_puddle_filter). Identifies approximate location of a highly reflective region on the ground (i.e. puddles) and places a marker and tf frame over it. **DISCLAIMER:**  This is very rough starter code meant to serve as an example for point cloud processing. This code is not robust and is not integrated with any of the existing stack. For example, this node cannot deal with multiple puddles simultaneously and estimates location naively. This is by means the only or expected approach to identifying puddles and your group is expected to entirely repurpose or rewrite this code to suit your team's objectives.
+scripts/puddle_viz.py: Subscribes to the filtered velodyne points produced by velodyne_filter.launch (/velodyne_puddle_filter). Identifies approximate location of a highly reflective region on the ground (i.e. puddles) and places a marker and tf frame over it. **DISCLAIMER:**  This is very rough starter code meant to serve as an example for point cloud processing. This code is not robust and is not integrated with any of the existing stack. For example, this node cannot deal with multiple puddles simultaneously and estimates location naively. This is by no means the only or expected approach to identifying puddles and your group is expected to entirely repurpose or rewrite this code to suit your team's objectives.
 
 scripts/utils.py: Utility functions. Currently contains a wrapToPi function, but feel free to add to this.
 
@@ -76,12 +76,21 @@ string[] objects - Array of strings corresponding to object names.
 DetectedObject[] ob_msgs - Array of DetectedObject objects.
 
 
+**Tensorflow Models:**
+
+The `.pb` files in the `tfmodels` folder are "frozen" neural network models, and contain both the structure and the weights of pretrained networks. `ssd_mobilenet_v1_coco.pb` is a pretrained MobileNet v1 model, while `stop_sign_gazebo.pb` is a model fine-tuend to detect stop signs in Gazebo. We recommend using `ssd_resnet_50_fpn.pb`, which is a larger, more accurate and robust model, but does not fit on a GitHub repo and can be downloaded [here](https://stanford.box.com/s/vszjfhwkjb203qbwhzoirn3uzt5r16lv). 
+
+The `coco_labels.txt` file just contains the mapping from the class number output by the model to human-interpretable labels.
+
+There are many other pretrained models you could use, see the [Tensorflow detection model zoo](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/detection_model_zoo.md) for more.
+
+
 **Other:**
 
 env_pi.sh: Script to remote launch nodes on the raspberry pi from the jetson. This overcomes the need to ssh into the raspberry pi separately from the jetson to launch the camera node. This goes in ~/catkin_ws/devel/ on the raspberry pi.
 
-tfmodels/coco_labels.txt, stop_sign_gazebo.pb, ssd_mobilenet_v1_coco.pb: Pre-trained tensorflow models for the detector.py or detector_mobilenet.py
-
 roslocal.sh, rostb3.sh: Scripts to set your ROS IP settings.
 
 CMAkeLists.txt: Make file for the package
+
+
