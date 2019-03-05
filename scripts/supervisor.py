@@ -214,7 +214,7 @@ class Supervisor:
             if self.has_stopped():
                 self.init_crossing()
             else:
-                pass
+                self.stay_idle()
 
         elif self.mode == Mode.CROSS:
             # crossing an intersection
