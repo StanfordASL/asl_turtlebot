@@ -21,7 +21,7 @@ world/project_city.world: Defines 3D model of rough, tentative representation of
 
 launch/turtlebot3_bringup_jetson_pi.launch: Launches the core elements of the turtlebot stack (turtlebot drivers, camera, lidar, gmapping, static tf transforms). This should run onboard the jetson.
 
-launch/velodyne_filter.launch: An example of how to filter the point cloud based on spatial coordinates and reflected beam intensity. This is used in conjunction with puddle_viz.py.
+launch/velodyne_filter.launch: An example of how to filter the point cloud based on spatial coordinates and reflected beam intensity. This is used in conjunction with puddle_viz.py. You can run "rosrun rqt_reconfigure rqt_reconfigure" to change the threshold parameters online.
 
 
 **Scripts/Nodes:**
@@ -34,7 +34,9 @@ scripts/cmd_nav_commander.py: Translates Rviz nav goal clicks (/move_simple_base
 
 scripts/detector.py: Gazebo stop sign detector from HW2. Publishes to /detector/* where * is the detected object label.
 
-scripts/detector_mobilenet.py: Runs tensorflow mobilenet model for image classification. Publishes to /detector/* where * is the detected object label. **DISCLAIMER:** The distance estimation is not accurate. It subscribes to the /scan which are the beams in the velodyne's plane. This is only useful if the object  intersects with the plane. You should combine the camera and/or point cloud to estimate the distance.
+scripts/detector_mobilenet.py: Runs tensorflow mobilenet model for image classification. Publishes to /detector/* where * is the detected object label. **DISCLAIMER:** The distance estimation is not always very accurate and is noisy. It subscribes to the /scan which takes the closest point (in xy-distance) from any laserscan ring below the horizontal ring, ignoring all points a threshold z_min below the velodyne as ground points. For the current configuration of the Turtlebot, we have set z_min = 16cm. You can combine the camera and/or point cloud to improve the estimate of the distance.
+
+scripts/detector_resnet.py: Same as scripts/detector_mobilenet.py but uses the ResNet model instead. It is a more sophisticated model than mobilenet. We found this is better at detecting food objects, but it is up to you to choose which one you want.
 
 scripts/detector_viz.py: Visualizes camera feed, bounding boxes and confidence for detected objects.
 
@@ -78,7 +80,7 @@ DetectedObject[] ob_msgs - Array of DetectedObject objects.
 
 **Tensorflow Models:**
 
-The `.pb` files in the `tfmodels` folder are "frozen" neural network models, and contain both the structure and the weights of pretrained networks. `ssd_mobilenet_v1_coco.pb` is a pretrained MobileNet v1 model, while `stop_sign_gazebo.pb` is a model fine-tuend to detect stop signs in Gazebo. We recommend using `ssd_resnet_50_fpn.pb`, which is a larger, more accurate and robust model, but does not fit on a GitHub repo and can be downloaded [here](https://stanford.box.com/s/vszjfhwkjb203qbwhzoirn3uzt5r16lv). 
+The `.pb` files in the `tfmodels` folder are "frozen" neural network models, and contain both the structure and the weights of pretrained networks. `ssd_mobilenet_v1_coco.pb` is a pretrained MobileNet v1 model, while `stop_sign_gazebo.pb` is a model fine-tuend to detect stop signs in Gazebo. We recommend using `ssd_resnet_50_fpn.pb`, which is a larger, more accurate and robust model, but does not fit on a GitHub repo and can be downloaded [here](https://stanford.app.box.com/s/vszjfhwkjb203qbwhzoirn3uzt5r16lv). 
 
 The `coco_labels.txt` file just contains the mapping from the class number output by the model to human-interpretable labels.
 
@@ -91,6 +93,6 @@ env_pi.sh: Script to remote launch nodes on the raspberry pi from the jetson. Th
 
 roslocal.sh, rostb3.sh: Scripts to set your ROS IP settings.
 
-CMAkeLists.txt: Make file for the package
+CMakeLists.txt: Make file for the package
 
 
