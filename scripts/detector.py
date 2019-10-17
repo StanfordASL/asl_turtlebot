@@ -12,16 +12,6 @@ from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import math
 
-# path to the trained conv net
-PATH_TO_MODEL = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../tfmodels/stop_signs_gazebo.pb')
-PATH_TO_LABELS = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../tfmodels/coco_labels.txt')
-
-# set to True to use tensorflow and a conv net
-# False will use a very simple color thresholding to detect stop signs only
-USE_TF = rospy.get_param("use_tf")
-# minimum score for positive detection
-MIN_SCORE = .5
-
 def load_object_labels(filename):
     """ loads the coco object readable name """
 
@@ -36,17 +26,42 @@ def load_object_labels(filename):
 
     return object_labels
 
+class DetectorParams:
+
+    def __init__(self, verbose=False):
+
+        # Set to True to use tensorflow and a conv net.
+        # False will use a very simple color thresholding to detect stop signs only.
+        self.use_tf = rospy.get_param("use_tf")
+
+        # Path to the trained conv net
+        model_path = rospy.get_param("~model_path", "../tfmodels/stop_signs_gazebo.pb")
+        label_path = rospy.get_param("~label_path", "../tfmodels/coco_labels.txt")
+        self.model_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), model_path)
+        self.label_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), label_path)
+
+        # Minimum score for positive detection
+        self.min_score = rospy.get_param("~min_score", 0.5)
+
+        if verbose:
+            print("DetectorParams:")
+            print("    use_tf = {}".format(self.use_tf))
+            print("    model_path = {}".format(model_path))
+            print("    label_path = {}".format(label_path))
+            print("    min_score = {}".format(self.min_score))
+
 class Detector:
 
     def __init__(self):
         rospy.init_node('turtlebot_detector', anonymous=True)
+        self.params = DetectorParams()
         self.bridge = CvBridge()
 
-        if USE_TF:
+        if self.params.use_tf:
             self.detection_graph = tf.Graph()
             with self.detection_graph.as_default():
                 od_graph_def = tf.GraphDef()
-                with tf.gfile.GFile(PATH_TO_MODEL, 'rb') as fid:
+                with tf.gfile.GFile(self.params.model_path, 'rb') as fid:
                     serialized_graph = fid.read()
                     od_graph_def.ParseFromString(serialized_graph)
                     tf.import_graph_def(od_graph_def,name='')
@@ -66,7 +81,7 @@ class Detector:
         self.laser_angle_increment = 0.01 # this gets updated
 
         self.object_publishers = {}
-        self.object_labels = load_object_labels(PATH_TO_LABELS)
+        self.object_labels = load_object_labels(self.params.label_path)
 
         self.tf_listener = TransformListener()
         rospy.Subscriber('/camera/image_raw', Image, self.camera_callback, queue_size=1)
@@ -79,7 +94,7 @@ class Detector:
         image_np = self.load_image_into_numpy_array(img)
         image_np_expanded = np.expand_dims(image_np, axis=0)
 
-        if USE_TF:
+        if self.params.use_tf:
             # uses MobileNet to detect objects in images
             # this works well in the real world, but requires
             # good computational resources
@@ -118,7 +133,7 @@ class Detector:
         f_num = 0
 
         for i in range(num):
-            if scores[i] >= MIN_SCORE:
+            if scores[i] >= self.params.min_score:
                 f_scores.append(scores[i])
                 f_boxes.append(boxes[i])
                 f_classes.append(int(classes[i]))
@@ -135,19 +150,18 @@ class Detector:
 
         return np.array(img.data).reshape((im_height, im_width, 3)).astype(np.uint8)
 
-    def project_pixel_to_ray(self,u,v):
+    def project_pixel_to_ray(self, u, v):
         """ takes in a pixel coordinate (u,v) and returns a tuple (x,y,z)
         that is a unit vector in the direction of the pixel, in the camera frame """
 
-        ### YOUR CODE HERE ###
+        ########## Code starts here ##########
+        # TODO: Compute x, y, z.
+        x = 0.
+        y = 0.
+        z = 1.
+        ########## Code ends here ##########
 
-        x = 1 # CHANGE ME
-        y = 0 # CHANGE ME
-        z = 0 # CHANGE ME
-
-        ### END OF YOUR CODE ###
-
-        return (x,y,z)
+        return x, y, z
 
     def estimate_distance(self, thetaleft, thetaright, ranges):
         """ estimates the distance of an object in between two angles
@@ -239,14 +253,13 @@ class Detector:
         cx, cy are the center of the image in pixel (the principal point), fx and fy are
         the focal lengths. """
 
-        ### YOUR CODE HERE ###
-
-        self.cx = 0 # CHANGE ME
-        self.cy = 0 # CHANGE ME
-        self.fx = 1 # CHANGE ME
-        self.fy = 1 # CHANGE ME
-
-        ### END OF YOUR CODE ###
+        ########## Code starts here ##########
+        # TODO: Extract camera intrinsic parameters.
+        self.cx = 0.
+        self.cy = 0.
+        self.fx = 1.
+        self.fy = 1.
+        ########## Code ends here ##########
 
     def laser_callback(self, msg):
         """ callback for thr laser rangefinder """
