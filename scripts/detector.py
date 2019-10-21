@@ -4,7 +4,10 @@ import rospy
 import os
 # watch out on the order for the next two imports lol
 from tf import TransformListener
-import tensorflow as tf
+try:
+    import tensorflow as tf
+except:
+    pass
 import numpy as np
 from sensor_msgs.msg import Image, CameraInfo, LaserScan
 from asl_turtlebot.msg import DetectedObject
