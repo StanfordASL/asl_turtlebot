@@ -2,10 +2,9 @@
     <include file="$(find turtlebot3_bringup)/launch/turtlebot3_core.launch" />
     <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch" />
 
-    <!-- PU NAME OF YOUR PI HERE -->
-    <machine name="pi" address="<name of pi>.local" env-loader="~/catkin_ws/devel/env_pi.sh" user="aa274" password="aa274" />
+    <machine name="pi" address="$(env PI_HOSTNAME)" env-loader="~/catkin_ws/devel/env_pi.sh" user="aa274" password="aa274" />
 
-
+    <node pkg="topic_tools" type="throttle" name="velodyne_throttler" args="messages /velodyne_points 3" />
 
     <node machine="pi" type="raspicam_node" pkg="raspicam_node" name="raspicam_node" output="screen">
 
