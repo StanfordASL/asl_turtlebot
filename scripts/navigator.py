@@ -25,7 +25,7 @@ AT_THRESH_THETA = 0.1
 
 # threshold to be far enough into the plan
 # to recompute it
-START_POS_THRESH = .2 # TODO: implement this feature
+START_POS_THRESH = .2
 
 # thereshold in theta to start moving forward when path following
 THETA_START_THRESH = 0.5
@@ -267,7 +267,7 @@ class Navigator:
             return
 
         traj, t = compute_smoothed_traj(path, V_DES, SPLINE_ALPHA, TRAJ_DT)
-        # TODO: time scaling?
+
         self.traj_controller.load_traj(t, traj)
 
         self.current_plan_start_time = rospy.get_rostime()

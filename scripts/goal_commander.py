@@ -4,7 +4,7 @@ from geometry_msgs.msg import Pose2D, PoseStamped
 import tf
 
 # if using gmapping, you will have a map frame. otherwise it will be odom frame
-mapping = rospy.get_param("map")
+mapping = True
 
 class GoalPoseCommander:
 
