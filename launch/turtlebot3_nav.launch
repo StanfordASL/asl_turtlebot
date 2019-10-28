@@ -1,9 +1,5 @@
 <launch>
 
-  <rosparam param="sim">false</rosparam>
-  <rosparam param="map">true</rosparam>
-  <rosparam param="rviz">true</rosparam>
-  <node pkg="asl_turtlebot" type="goal_commander.py" name="goal_commander" output="screen"/>
   <node pkg="asl_turtlebot" type="navigator.py" name="turtlebot_navigator" output="screen" />
   
 </launch>
