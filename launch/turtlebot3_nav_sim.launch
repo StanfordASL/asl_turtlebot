@@ -56,17 +56,10 @@
   </node>
   
 
-  <rosparam param="sim">false</rosparam>
+  <rosparam param="sim">true</rosparam>
   <rosparam param="map">true</rosparam>
   <rosparam param="rviz">true</rosparam>
-  <rosparam param="use_tf">false</rosparam>
-  <node pkg="asl_turtlebot" type="supervisor_nav.py" name="turtlebot_supervisor_nav" output="screen"/>
-  <node pkg="asl_turtlebot" type="detector.py" name="turtlebot_detector" output="screen"/>  
-  <node pkg="asl_turtlebot" type="pose_controller_nav.py" name="turtlebot_pose_controller_nav" />
-  <node pkg="asl_turtlebot" type="navigator.py" name="turtlebot_navigator" />
-
-
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find asl_turtlebot)/rviz/nav.rviz"/>
-
+  <node pkg="asl_turtlebot" type="goal_commander.py" name="goal_commander" output="screen"/>
+  <node pkg="asl_turtlebot" type="navigator.py" name="turtlebot_navigator" output="screen" />
 
 </launch>

@@ -17,7 +17,7 @@ class GoalPoseCommander:
         self.goal_pose_received = False
         self.trans_listener = tf.TransformListener()
         # command pose for controller
-        self.pose_goal_publisher = rospy.Publisher('/cmd_pose', Pose2D, queue_size=10)
+        self.nav_goal_publisher = rospy.Publisher('/cmd_nav', Pose2D, queue_size=10)
         rospy.Subscriber('/move_base_simple/goal', PoseStamped, self.rviz_goal_callback)
         
     def rviz_goal_callback(self, msg):
@@ -36,28 +36,19 @@ class GoalPoseCommander:
                     nav_pose_origin.pose.orientation.w)
             euler = tf.transformations.euler_from_quaternion(quaternion)
             self.theta_g = euler[2]
-            self.goal_pose_received = True
+            self.publish_goal_pose()
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
             pass
 
     def publish_goal_pose(self):
-        """ sends the current desired pose to the pose controller """
+        """ sends the current desired pose to the navigator """
         pose_g_msg = Pose2D()
         pose_g_msg.x = self.x_g
         pose_g_msg.y = self.y_g
         pose_g_msg.theta = self.theta_g
-        self.pose_goal_publisher.publish(pose_g_msg)
+        self.nav_goal_publisher.publish(pose_g_msg)
 
-    def loop(self):
-        if self.goal_pose_received:
-            self.publish_goal_pose()
-
-    def run(self):
-        rate = rospy.Rate(10) # 10 Hz
-        while not rospy.is_shutdown():
-            self.loop()
-            rate.sleep()
 
 if __name__ == '__main__':
     sup = GoalPoseCommander()
-    sup.run()
+    rospy.spin()
