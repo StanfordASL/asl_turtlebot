@@ -10,9 +10,9 @@ import tf
 import tf2_ros
 from copy import deepcopy
 from collections import deque
-from ekf import SLAM_EKF
-from ExtractLines import ExtractLines
-from maze_sim_parameters import LineExtractionParams, NoiseParams, ARENA, ArenaParams
+from HW4.ekf import EkfSlam
+from HW4.ExtractLines import ExtractLines
+from HW4.maze_sim_parameters import LineExtractionParams, NoiseParams, ARENA, ArenaParams
 
 def get_yaw_from_quaternion(quat):
     return tf.transformations.euler_from_quaternion([quat.x,
@@ -154,12 +154,12 @@ class EKF_SLAM_Visualizer:
         x0_pose = np.array([self.latest_pose.position.x,
                             self.latest_pose.position.y,
                             get_yaw_from_quaternion(self.latest_pose.orientation)])
-        P0_pose = NoiseParams["P0"]
+        P0_pose = NoiseParams["Sigma0"]
         self.EKF_time = self.latest_pose_time
-        self.EKF = SLAM_EKF(np.concatenate((x0_pose, self.x0_map)), scipy.linalg.block_diag(P0_pose, self.P0_map),
-                            NoiseParams["Q"], self.base_to_camera, 2*NoiseParams["g"])
-        self.OLC = SLAM_EKF(np.concatenate((x0_pose, self.x0_map)), scipy.linalg.block_diag(P0_pose, self.P0_map),
-                            NoiseParams["Q"], self.base_to_camera, 2*NoiseParams["g"])
+        self.EKF = EkfSlam(np.concatenate((x0_pose, self.x0_map)), scipy.linalg.block_diag(P0_pose, self.P0_map),
+                           NoiseParams["R"], self.base_to_camera, 2*NoiseParams["g"])
+        self.OLC = EkfSlam(np.concatenate((x0_pose, self.x0_map)), scipy.linalg.block_diag(P0_pose, self.P0_map),
+                           NoiseParams["R"], self.base_to_camera, 2*NoiseParams["g"])
 
         while True:
             if not self.scans:
