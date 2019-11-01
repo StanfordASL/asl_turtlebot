@@ -1,15 +1,29 @@
 #!/usr/bin/env python
+
 import rospy
 from gazebo_msgs.msg import ModelStates
-from sensor_msgs.msg import LaserScan
-from geometry_msgs.msg import Twist, TransformStamped
+from sensor_msgs.msg import LaserScan, PointCloud, ChannelFloat32
+from geometry_msgs.msg import Twist, TransformStamped, Point32
 import numpy as np
 import tf
 import tf2_ros
 from collections import deque
-from ekf import Localization_EKF
-from ExtractLines import ExtractLines
-from maze_sim_parameters import LineExtractionParams, NoiseParams, MapParams
+from HW4.ekf import EkfLocalization
+from HW4.ExtractLines import ExtractLines
+from HW4.maze_sim_parameters import LineExtractionParams, NoiseParams, MapParams
+
+class LocalizationParams:
+
+    def __init__(self, verbose=False):
+        self.mc = rospy.get_param("~mc", False)
+        self.num_particles = rospy.get_param("~num_particles", 100)
+        if verbose:
+            print(self)
+
+    def __repr__(self):
+        return ("LocalizationParams:\n"
+                "    mc = {}\n"
+                "    num_particles = {}").format(self.mc, self.num_particles)
 
 def get_yaw_from_quaternion(quat):
     return tf.transformations.euler_from_quaternion([quat.x,
@@ -35,6 +49,7 @@ class LocalizationVisualizer:
 
     def __init__(self):
         rospy.init_node('turtlebot_localization')
+        self.params = LocalizationParams(verbose=True)
         
         ## Use simulation time (i.e. get time from rostopic /clock)
         rospy.set_param('use_sim_time', 'true')
@@ -80,6 +95,9 @@ class LocalizationVisualizer:
         rospy.Subscriber('/gazebo/model_states', ModelStates, self.state_callback)
         self.ground_truth_ct = 0
 
+        if self.params.mc:
+            self.particles_pub = rospy.Publisher('particle_filter', PointCloud, queue_size=10)
+
     def scan_callback(self, msg):
         if self.EKF:
             self.scans.append((msg.header.stamp,
@@ -105,6 +123,15 @@ class LocalizationVisualizer:
     def run(self):
         rate = rospy.Rate(100)
 
+        particles = PointCloud()
+        particles.header.stamp = self.EKF_time
+        particles.header.frame_id = "world"
+        particles.points = [Point32(0., 0., 0.) for _ in range(self.params.num_particles)]
+        particle_intensities = ChannelFloat32()
+        particle_intensities.name = "intensity"
+        particle_intensities.values = [0. for _ in range(self.params.num_particles)]
+        particles.channels.append(particle_intensities)
+
         while not self.latest_pose:
             rate.sleep()
 
@@ -112,10 +139,18 @@ class LocalizationVisualizer:
                        self.latest_pose.position.y,
                        get_yaw_from_quaternion(self.latest_pose.orientation)])
         self.EKF_time = self.latest_pose_time
-        self.EKF = Localization_EKF(x0, NoiseParams["P0"], NoiseParams["Q"],
-                                    MapParams, self.base_to_camera, NoiseParams["g"])
-        self.OLC = Localization_EKF(x0, NoiseParams["P0"], NoiseParams["Q"],
-                                    MapParams, self.base_to_camera, NoiseParams["g"])
+        if self.params.mc:
+            x0s = np.tile(np.expand_dims(x0, 0), (self.params.num_particles, 1))
+            from HW4.particle_filter import MonteCarloLocalization
+            self.EKF = MonteCarloLocalization(x0s, 10. * NoiseParams["R"],
+                                              MapParams, self.base_to_camera, NoiseParams["g"])
+            self.OLC = EkfLocalization(x0, NoiseParams["Sigma0"], NoiseParams["R"],
+                                       MapParams, self.base_to_camera, NoiseParams["g"])
+        else:
+            self.EKF = EkfLocalization(x0, NoiseParams["Sigma0"], NoiseParams["R"],
+                                       MapParams, self.base_to_camera, NoiseParams["g"])
+            self.OLC = EkfLocalization(x0, NoiseParams["Sigma0"], NoiseParams["R"],
+                                       MapParams, self.base_to_camera, NoiseParams["g"])
 
         while True:
             if not self.scans:
@@ -131,17 +166,28 @@ class LocalizationVisualizer:
                 self.OLC.transition_update(self.current_control,
                                            next_timestep.to_time() - self.EKF_time.to_time())
                 self.EKF_time, self.current_control = next_timestep, next_control
+                label = "EKF" if not self.params.mc else "MCL"
                 self.tfBroadcaster.sendTransform(create_transform_msg(
                     (self.EKF.x[0], self.EKF.x[1], 0),
                     tf.transformations.quaternion_from_euler(0, 0, self.EKF.x[2]),
-                    "EKF", "world", self.EKF_time)
+                    label, "world", self.EKF_time)
                 )
                 self.tfBroadcaster.sendTransform(create_transform_msg(
                     (self.OLC.x[0], self.OLC.x[1], 0),
                     tf.transformations.quaternion_from_euler(0, 0, self.OLC.x[2]),
                     "open_loop", "world", self.EKF_time)
                 )
-            
+
+                if self.params.mc:
+                    particles.header.stamp = self.EKF_time
+                    for m in range(self.params.num_particles):
+                        x = self.EKF.xs[m]
+                        w = self.EKF.ws[m]
+                        particles.points[m].x = x[0]
+                        particles.points[m].y = x[1]
+                        particles.channels[0].values[m] = w
+                    self.particles_pub.publish(particles)
+
             scan_time, theta, rho = self.scans.popleft()
             if scan_time < self.EKF_time:
                 continue
@@ -156,6 +202,17 @@ class LocalizationVisualizer:
                                                 NoiseParams["var_rho"])
             Z = np.vstack((alpha, r))
             self.EKF.measurement_update(Z, C_AR)
+
+            if self.params.mc:
+                particles.header.stamp = self.EKF_time
+                for m in range(self.params.num_particles):
+                    x = self.EKF.xs[m]
+                    w = self.EKF.ws[m]
+                    particles.points[m].x = x[0]
+                    particles.points[m].y = x[1]
+                    particles.channels[0].values[m] = w
+                self.particles_pub.publish(particles)
+
             while len(self.scans) > 1:    # keep only the last element in the queue, if we're falling behind
                 self.scans.popleft()
 
