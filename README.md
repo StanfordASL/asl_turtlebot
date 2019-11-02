@@ -4,3 +4,4 @@ Team Members are:
 - Manoj Rajagopalan
 - Eleonore Jacquemet
 - Richie Ling
+- Ryan Rice
