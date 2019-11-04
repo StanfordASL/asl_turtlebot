@@ -63,7 +63,7 @@
 
     <node pkg="tf" type="static_transform_publisher" name="camera_broadcaster" args="0 0 0 0 0 0.707107 0.707107 raspicam camera 100" />
 
-    <node pkg="tf" type="static_transform_publisher" name="velodyne_broadcaster" args="-0.076 0 0.215 0 0 0 1 base_footprint velodyne 100" />
+    <node pkg="tf" type="static_transform_publisher" name="velodyne_broadcaster" args="0.0175 0 0.215 0 0 0 1 base_footprint velodyne 100" />
 </launch>
 
 
