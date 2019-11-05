@@ -156,6 +156,16 @@ class Navigator:
                 rospy.loginfo("replanning because of new map")
                 self.replan() # new map, need to replan
 
+    def shutdown_callback(self):
+        """
+        publishes zero velocities upon rospy shutdown
+        """
+        cmd_vel = Twist()
+        cmd_vel.linear.x = 0.0
+        cmd_vel.angular.z = 0.0
+        self.nav_vel_pub.publish(cmd_vel)
+
+
     def near_goal(self):
         """
         returns whether the robot is close enough in position to the goal to
@@ -177,9 +187,9 @@ class Navigator:
         (enough to switch to tracking controller)
         """
         return (abs(wrapToPi(self.theta - self.th_init)) < THETA_START_THRESH)
-        
+
     def close_to_plan_start(self):
-        return (abs(self.x - self.plan_start[0])<START_POS_THRESH 
+        return (abs(self.x - self.plan_start[0])<START_POS_THRESH
                     and abs(self.y - self.plan_start[1])<START_POS_THRESH)
 
     def snap_to_grid(self, x):
@@ -331,4 +341,5 @@ class Navigator:
 
 if __name__ == '__main__':
     nav = Navigator()
+    rospy.on_shutdown(nav.shutdown_callback)
     nav.run()
