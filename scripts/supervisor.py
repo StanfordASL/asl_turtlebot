@@ -258,12 +258,16 @@ class Supervisor:
                 self.go_to_pose()
 
         elif self.mode == Mode.STOP:
-            # At a stop sign
-            self.nav_to_pose()
+			if self.has_stopped():
+				self.init_crossing()
+			else:
+				self.stay_idle()
 
         elif self.mode == Mode.CROSS:
-            # Crossing an intersection
-            self.nav_to_pose()
+			if self.has_crossed():
+				self.mode = Mode.POSE
+			else:
+				self.nav_to_pose()
 
         elif self.mode == Mode.NAV:
             if self.close_to(self.x_g, self.y_g, self.theta_g):

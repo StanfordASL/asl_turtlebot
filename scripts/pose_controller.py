@@ -44,36 +44,36 @@ class PoseControllerParams:
 class PoseControllerNode:
 
     def __init__(self):
-        # Initialize ROS node
-        rospy.init_node('turtlebot_pose_controller', anonymous=True)
-        self.params = PoseControllerParams(verbose=True)
+		# Initialize ROS node
+		rospy.init_node('turtlebot_pose_controller', anonymous=True)
+		self.params = PoseControllerParams(verbose=True)
 
-        # Current state
-        self.x = 0.
-        self.y = 0.
-        self.theta = 0.
+		# Current state
+		self.x = 0.
+		self.y = 0.
+		self.theta = 0.
 
-        # Controller from HW1 P2
-        self.controller = PoseController(self.params.k1, self.params.k2, self.params.k3,
-                                         self.params.v_max, self.params.om_max)
+		# Controller from HW1 P2
+		self.controller = PoseController(self.params.k1, self.params.k2, self.params.k3,
+										 self.params.v_max, self.params.om_max)
 
-        self.controller.load_goal(self.x, self.y, self.theta)
+		self.controller.load_goal(self.x, self.y, self.theta)
 
-        self.pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
+		self.pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
 
-        # Time last pose command was received
-        self.cmd_pose_time = rospy.get_rostime()
+		# Time last pose command was received
+		self.cmd_pose_time = rospy.get_rostime()
 
-        # If using gazebo, we have access to perfect state
-        if self.params.use_gazebo:
-            rospy.Subscriber('/gazebo/model_states', ModelStates, self.gazebo_callback)
-        self.trans_listener = tf.TransformListener()
+		# If using gazebo, we have access to perfect state
+		if self.params.use_gazebo:
+			rospy.Subscriber('/gazebo/model_states', ModelStates, self.gazebo_callback)
+		self.trans_listener = tf.TransformListener()
 
-        ########## Code starts here ##########
-        # TODO: Create a subscriber to the '/cmd_pose' topic that receives
-        #       Pose2D messages and calls cmd_pose_callback.
-
-        ########## Code ends here ##########
+		########## Code starts here ##########
+		# TODO: Create a subscriber to the '/cmd_pose' topic that receives
+		#       Pose2D messages and calls cmd_pose_callback.
+		rospy.Subscriber('/cmd_pose', Pose2D, self.cmd_pose_callback)
+		########## Code ends here ##########
 
 
     def gazebo_callback(self, msg):
@@ -89,45 +89,45 @@ class PoseControllerNode:
 
 
     def cmd_pose_callback(self, msg):
-        ########## Code starts here ##########
-        # TODO: Update the goal pose in the pose controller.
+		########## Code starts here ##########
+		# TODO: Update the goal pose in the pose controller.
+		self.controller.load_goal(msg.x, msg.y, msg.theta)
+		########## Code ends here ##########
 
-        ########## Code ends here ##########
-
-        # Record time of pose update
-        self.cmd_pose_time = rospy.get_rostime()
+		# Record time of pose update
+		self.cmd_pose_time = rospy.get_rostime()
 
 
     def compute_control(self):
-        if rospy.get_rostime().to_sec() - self.cmd_pose_time.to_sec() > self.params.timeout:
-            # haven't received a command in a while so stop
-            rospy.loginfo("Pose controller TIMEOUT: commanding zero controls")
-            cmd = Twist()
-            cmd.linear.x = 0.
-            cmd.angular.z = 0.
-            return cmd
+		if rospy.get_rostime().to_sec() - self.cmd_pose_time.to_sec() > self.params.timeout:
+			# haven't received a command in a while so stop
+			rospy.loginfo("Pose controller TIMEOUT: commanding zero controls")
+			cmd = Twist()
+			cmd.linear.x = 0.
+			cmd.angular.z = 0.
+			return cmd
 
-        # if you are not using gazebo, your need to use a TF look-up to find robot's states
-        # relevant for hw 3+
-        if not self.params.use_gazebo:
-            try:
-                origin_frame = "/map" if self.params.mapping else "/odom"
-                translation, rotation = self.trans_listener.lookupTransform(origin_frame, '/base_footprint', rospy.Time(0))
-                self.x, self.y = translation[0], translation[1]
-                self.theta = tf.transformations.euler_from_quaternion(rotation)[2]
-            except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-                pass
+		# if you are not using gazebo, your need to use a TF look-up to find robot's states
+		# relevant for hw 3+
+		if not self.params.use_gazebo:
+			try:
+				origin_frame = "/map" if self.params.mapping else "/odom"
+				translation, rotation = self.trans_listener.lookupTransform(origin_frame, '/base_footprint', rospy.Time(0))
+				self.x, self.y = translation[0], translation[1]
+				self.theta = tf.transformations.euler_from_quaternion(rotation)[2]
+			except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+				pass
 
-        ######### YOUR CODE HERE ############
-        # TODO: Use your pose controller to compute controls (V, om) given the
-        #       robot's current state.
+		######### YOUR CODE HERE ############
+		# TODO: Use your pose controller to compute controls (V, om) given the
+		#       robot's current state.
+		V, om = self.controller.compute_control(self.x, self.y, self.theta, 0)
+		######### END OF YOUR CODE ##########
 
-        ######### END OF YOUR CODE ##########
-
-        cmd = Twist()
-        cmd.linear.x = V
-        cmd.angular.z = om
-        return cmd
+		cmd = Twist()
+		cmd.linear.x = V
+		cmd.angular.z = om
+		return cmd
 
 
     def run(self):
