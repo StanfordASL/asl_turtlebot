@@ -152,6 +152,16 @@ class Navigator:
                 rospy.loginfo("replanning because of new map")
                 self.replan() # new map, need to replan
 
+    def shutdown_callback(self):
+        """
+        publishes zero velocities upon rospy shutdown
+        """
+        cmd_vel = Twist()
+        cmd_vel.linear.x = 0.0
+        cmd_vel.angular.z = 0.0
+        self.nav_vel_pub.publish(cmd_vel)
+
+
     def near_goal(self):
         """
         returns whether the robot is close enough in position to the goal to
@@ -342,4 +352,5 @@ class Navigator:
 
 if __name__ == '__main__':    
     nav = Navigator()
+    rospy.on_shutdown(nav.shutdown_callback)
     nav.run()
