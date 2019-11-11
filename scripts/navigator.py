@@ -2,7 +2,6 @@
 
 import rospy
 from nav_msgs.msg import OccupancyGrid, MapMetaData, Path
-from gazebo_msgs.msg import ModelStates
 from geometry_msgs.msg import Twist, PoseArray, Pose2D, PoseStamped
 from std_msgs.msg import Float32MultiArray, String
 import tf
@@ -16,48 +15,8 @@ import matplotlib.pyplot as plt
 from controllers import PoseController, TrajectoryTracker, HeadingController
 from enum import Enum
 
-# TODO: switch these to ROS params
-# threshold at which navigator switches
-# from trajectory to pose control
-NEAR_THRESH = .2
-AT_THRESH = 0.02
-AT_THRESH_THETA = 0.1
-
-# threshold to be far enough into the plan
-# to recompute it
-START_POS_THRESH = .2
-
-# thereshold in theta to start moving forward when path following
-THETA_START_THRESH = 0.5
-
-# maximum velocity
-V_MAX = .2
-
-# maximim angular velocity
-OM_MAX = .4
-
-# desired crusing velocity
-V_DES = 0.12
-
-# gains of the path follower
-KPX = .5
-KPY = .5
-KDX = 1.5
-KDY = 1.5
-
-# gains of the pose controller
-K1 = 0.4
-K2 = 0.8
-K3 = 0.8
-
-# gains of the heading controller
-KP_TH = 1.
-
-
-
-# smoothing condition (see splrep documentation)
-SPLINE_ALPHA = .05
-TRAJ_DT = 0.1
+from dynamic_reconfigure.server import Server
+from asl_turtlebot.cfg import NavigatorConfig
 
 # state machine modes, not all implemented
 class Mode(Enum):
@@ -104,19 +63,56 @@ class Navigator:
         self.current_plan_start_time = rospy.get_rostime()
         self.current_plan_duration = 0
         self.plan_start = [0.,0.]
+        
+        # Robot limits
+        self.v_max = 0.2    # maximum velocity
+        self.om_max = 0.4   # maximum angular velocity
 
-        self.traj_controller = TrajectoryTracker(KPX,KPY,KDX,KDY,V_MAX,OM_MAX)
-        self.pose_controller = PoseController(K1,K2,K3,V_MAX,OM_MAX)
-        self.heading_controller = HeadingController(KP_TH,OM_MAX)
+        self.v_des = 0.12   # desired cruising velocity
+        self.theta_start_thresh = 0.5   # threshold in theta to start moving forward when path-following
+        self.start_pos_thresh = 0.2     # threshold to be far enough into the plan to recompute it
 
-        self.nav_path_pub = rospy.Publisher('/cmd_path', Path, queue_size=10)
+        # threshold at which navigator switches from trajectory to pose control
+        self.near_thresh = 0.2
+        self.at_thresh = 0.02
+        self.at_thresh_theta = 0.1
+
+        # trajectory smoothing
+        self.spline_alpha = 0.05
+        self.traj_dt = 0.1
+
+        # trajectory tracking controller parameters
+        self.kpx = 0.5
+        self.kpy = 0.5
+        self.kdx = 1.5
+        self.kdy = 1.5
+
+        # heading controller parameters
+        self.kp_th = 1.
+
+        self.traj_controller = TrajectoryTracker(self.kpx, self.kpy, self.kdx, self.kdy, self.v_max, self.om_max)
+        self.pose_controller = PoseController(0., 0., 0., self.v_max, self.om_max)
+        self.heading_controller = HeadingController(self.kp_th, self.om_max)
+
+        self.nav_planned_path_pub = rospy.Publisher('/planned_path', Path, queue_size=10)
+        self.nav_smoothed_path_pub = rospy.Publisher('/cmd_smoothed_path', Path, queue_size=10)
         self.nav_vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
 
         self.trans_listener = tf.TransformListener()
 
+        self.cfg_srv = Server(NavigatorConfig, self.dyn_cfg_callback)
+
         rospy.Subscriber('/map', OccupancyGrid, self.map_callback)
         rospy.Subscriber('/map_metadata', MapMetaData, self.map_md_callback)
         rospy.Subscriber('/cmd_nav', Pose2D, self.cmd_nav_callback)
+        print "finished init"
+        
+    def dyn_cfg_callback(self, config, level):
+        rospy.loginfo("Reconfigure Request: k1:{k1}, k2:{k2}, k3:{k3}".format(**config))
+        self.pose_controller.k1 = config["k1"]
+        self.pose_controller.k2 = config["k2"]
+        self.pose_controller.k3 = config["k3"]
+        return config
 
     def cmd_nav_callback(self, data):
         """
@@ -171,26 +167,26 @@ class Navigator:
         returns whether the robot is close enough in position to the goal to
         start using the pose controller
         """
-        return (abs(self.x-self.x_g)<NEAR_THRESH and abs(self.y-self.y_g)<NEAR_THRESH)
+        return (abs(self.x-self.x_g)<self.near_thresh and abs(self.y-self.y_g)<self.near_thresh)
 
     def at_goal(self):
         """
         returns whether the robot has reached the goal position with enough
         accuracy to return to idle state
         """
-        return (abs(self.x-self.x_g)<AT_THRESH and abs(self.y-self.y_g)<AT_THRESH
-                    and abs(wrapToPi(self.theta - self.theta_g))<AT_THRESH_THETA)
+        return (abs(self.x-self.x_g)<self.at_thresh and abs(self.y-self.y_g)<self.at_thresh
+                    and abs(wrapToPi(self.theta - self.theta_g))<self.at_thresh_theta)
 
     def aligned(self):
         """
         returns whether robot is aligned with starting direction of path
         (enough to switch to tracking controller)
         """
-        return (abs(wrapToPi(self.theta - self.th_init)) < THETA_START_THRESH)
-
+        return (abs(wrapToPi(self.theta - self.th_init)) < self.theta_start_thresh)
+        
     def close_to_plan_start(self):
-        return (abs(self.x - self.plan_start[0])<START_POS_THRESH
-                    and abs(self.y - self.plan_start[1])<START_POS_THRESH)
+        return (abs(self.x - self.plan_start[0])<self.start_pos_thresh 
+                    and abs(self.y - self.plan_start[1])<self.start_pos_thresh)
 
     def snap_to_grid(self, x):
         return (self.plan_resolution*round(x[0]/self.plan_resolution), self.plan_resolution*round(x[1]/self.plan_resolution))
@@ -199,8 +195,8 @@ class Navigator:
         rospy.loginfo("Switching from %s -> %s", self.mode, new_mode)
         self.mode = new_mode
 
-    def publish_path(self, path):
-        # publish plan for visualization
+    def publish_planned_path(self, path):
+        # publish planned plan for visualization
         path_msg = Path()
         path_msg.header.frame_id = 'map'
         for state in path:
@@ -210,7 +206,20 @@ class Navigator:
             pose_st.pose.orientation.w = 1
             pose_st.header.frame_id = 'map'
             path_msg.poses.append(pose_st)
-        self.nav_path_pub.publish(path_msg)
+        self.nav_planned_path_pub.publish(path_msg)
+
+    def publish_smoothed_path(self, traj):
+        # publish planned plan for visualization
+        path_msg = Path()
+        path_msg.header.frame_id = 'map'
+        for i in range(traj.shape[0]):
+            pose_st = PoseStamped()
+            pose_st.pose.position.x = traj[i,0]
+            pose_st.pose.position.y = traj[i,1]
+            pose_st.pose.orientation.w = 1
+            pose_st.header.frame_id = 'map'
+            path_msg.poses.append(pose_st)
+        self.nav_smoothed_path_pub.publish(path_msg)
 
     def publish_control(self):
         """
@@ -264,26 +273,28 @@ class Navigator:
         if not success:
             rospy.loginfo("Planning failed")
             return
+        rospy.loginfo("Planning Succeeded")
 
         # planning successful, so set up the controllers and switch to the right mode:
 
         self.pose_controller.load_goal(self.x_g, self.y_g, self.theta_g)
 
-        path = problem.path
-        self.publish_path(path)
-        if len(path) < 4:
+        planned_path = problem.path
+        self.publish_planned_path(planned_path)
+        if len(planned_path) < 4:
             rospy.loginfo("Path too short to track")
             self.switch_mode(Mode.PARK)
             return
 
-        traj, t = compute_smoothed_traj(path, V_DES, SPLINE_ALPHA, TRAJ_DT)
+        traj, t = compute_smoothed_traj(planned_path, self.v_des, self.spline_alpha, self.traj_dt)
 
         self.traj_controller.load_traj(t, traj)
+        self.publish_smoothed_path(traj)
 
         self.current_plan_start_time = rospy.get_rostime()
         self.current_plan_duration = t[-1]
 
-        self.th_init = np.arctan2(path[1][1]-path[0][1],path[1][0]-path[0][0])
+        self.th_init = traj[0,4]
         self.heading_controller.load_goal(self.th_init)
 
         if not self.aligned():
@@ -339,7 +350,7 @@ class Navigator:
             self.publish_control()
             rate.sleep()
 
-if __name__ == '__main__':
+if __name__ == '__main__':    
     nav = Navigator()
     rospy.on_shutdown(nav.shutdown_callback)
     nav.run()
