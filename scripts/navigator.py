@@ -255,21 +255,21 @@ class Navigator:
 
         self.pose_controller.load_goal(self.x_g, self.y_g, self.theta_g)
 
-        path = problem.path
-        self.publish_path(path)
-        if len(path) < 4:
+        planned_path = problem.path
+        self.publish_path(planned_path)
+        if len(planned_path) < 4:
             rospy.loginfo("Path too short to track")
             self.switch_mode(Mode.PARK)
             return
 
-        traj, t = compute_smoothed_traj(path, self.v_des, self.spline_alpha, self.traj_dt)
+        traj, t = compute_smoothed_traj(planned_path, self.v_des, self.spline_alpha, self.traj_dt)
 
         self.traj_controller.load_traj(t, traj)
 
         self.current_plan_start_time = rospy.get_rostime()
         self.current_plan_duration = t[-1]
 
-        self.th_init = np.arctan2(path[1][1]-path[0][1],path[1][0]-path[0][0])
+        self.th_init = traj[0,4]
         self.heading_controller.load_goal(self.th_init)
 
         if not self.aligned():
