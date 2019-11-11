@@ -1,8 +1,0 @@
- <launch>
-    <rosparam param="sim">false</rosparam>
-    <rosparam param="map">true</rosparam>
-
-    <node pkg="asl_turtlebot" type="hw2_demo.py" name="turtlebot_pose_commander" />
-    <node pkg="asl_turtlebot" type="pose_controller.py" name="turtlebot_pose_controller" />
-
-</launch>
