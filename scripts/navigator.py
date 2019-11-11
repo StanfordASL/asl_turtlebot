@@ -94,7 +94,8 @@ class Navigator:
         self.pose_controller = PoseController(0., 0., 0., self.v_max, self.om_max)
         self.heading_controller = HeadingController(self.kp_th, self.om_max)
 
-        self.nav_path_pub = rospy.Publisher('/cmd_path', Path, queue_size=10)
+        self.nav_planned_path_pub = rospy.Publisher('/planned_path', Path, queue_size=10)
+        self.nav_smoothed_path_pub = rospy.Publisher('/cmd_smoothed_path', Path, queue_size=10)
         self.nav_vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
 
         self.trans_listener = tf.TransformListener()
@@ -184,8 +185,8 @@ class Navigator:
         rospy.loginfo("Switching from %s -> %s", self.mode, new_mode)
         self.mode = new_mode
 
-    def publish_path(self, path):
-        # publish plan for visualization
+    def publish_planned_path(self, path):
+        # publish planned plan for visualization
         path_msg = Path()
         path_msg.header.frame_id = 'map'
         for state in path:
@@ -195,7 +196,20 @@ class Navigator:
             pose_st.pose.orientation.w = 1
             pose_st.header.frame_id = 'map'
             path_msg.poses.append(pose_st)
-        self.nav_path_pub.publish(path_msg)
+        self.nav_planned_path_pub.publish(path_msg)
+
+    def publish_smoothed_path(self, traj):
+        # publish planned plan for visualization
+        path_msg = Path()
+        path_msg.header.frame_id = 'map'
+        for i in range(traj.shape[0]):
+            pose_st = PoseStamped()
+            pose_st.pose.position.x = traj[i,0]
+            pose_st.pose.position.y = traj[i,1]
+            pose_st.pose.orientation.w = 1
+            pose_st.header.frame_id = 'map'
+            path_msg.poses.append(pose_st)
+        self.nav_smoothed_path_pub.publish(path_msg)
 
     def publish_control(self):
         """
@@ -256,7 +270,7 @@ class Navigator:
         self.pose_controller.load_goal(self.x_g, self.y_g, self.theta_g)
 
         planned_path = problem.path
-        self.publish_path(planned_path)
+        self.publish_planned_path(planned_path)
         if len(planned_path) < 4:
             rospy.loginfo("Path too short to track")
             self.switch_mode(Mode.PARK)
@@ -265,6 +279,7 @@ class Navigator:
         traj, t = compute_smoothed_traj(planned_path, self.v_des, self.spline_alpha, self.traj_dt)
 
         self.traj_controller.load_traj(t, traj)
+        self.publish_smoothed_path(traj)
 
         self.current_plan_start_time = rospy.get_rostime()
         self.current_plan_duration = t[-1]
