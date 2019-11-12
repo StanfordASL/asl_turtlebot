@@ -284,7 +284,7 @@ class Navigator:
         self.current_plan_start_time = rospy.get_rostime()
         self.current_plan_duration = t[-1]
 
-        self.th_init = traj[0,4]
+        self.th_init = traj[0,2]
         self.heading_controller.load_goal(self.th_init)
 
         if not self.aligned():
