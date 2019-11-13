@@ -2,8 +2,8 @@
 
 import rospy
 from nav_msgs.msg import OccupancyGrid, MapMetaData, Path
-from geometry_msgs.msg import Twist, PoseArray, Pose2D, PoseStamped
-from std_msgs.msg import Float32MultiArray, String
+from geometry_msgs.msg import Twist, Pose2D, PoseStamped
+from std_msgs.msg import String
 import tf
 import numpy as np
 from numpy import linalg
@@ -75,7 +75,7 @@ class Navigator:
         # threshold at which navigator switches from trajectory to pose control
         self.near_thresh = 0.2
         self.at_thresh = 0.02
-        self.at_thresh_theta = 0.1
+        self.at_thresh_theta = 0.05
 
         # trajectory smoothing
         self.spline_alpha = 0.15
@@ -168,15 +168,14 @@ class Navigator:
         returns whether the robot is close enough in position to the goal to
         start using the pose controller
         """
-        return (abs(self.x-self.x_g)<self.near_thresh and abs(self.y-self.y_g)<self.near_thresh)
+        return linalg.norm(np.array([self.x-self.x_g, self.y-self.y_g])) < self.near_thresh
 
     def at_goal(self):
         """
         returns whether the robot has reached the goal position with enough
         accuracy to return to idle state
         """
-        return (abs(self.x-self.x_g)<self.at_thresh and abs(self.y-self.y_g)<self.at_thresh
-                    and abs(wrapToPi(self.theta - self.theta_g))<self.at_thresh_theta)
+        return (linalg.norm(np.array([self.x-self.x_g, self.y-self.y_g])) < self.near_thresh and abs(wrapToPi(self.theta - self.theta_g)) < self.at_thresh_theta)
 
     def aligned(self):
         """
@@ -186,8 +185,7 @@ class Navigator:
         return (abs(wrapToPi(self.theta - self.th_init)) < self.theta_start_thresh)
         
     def close_to_plan_start(self):
-        return (abs(self.x - self.plan_start[0])<self.start_pos_thresh 
-                    and abs(self.y - self.plan_start[1])<self.start_pos_thresh)
+        return (abs(self.x - self.plan_start[0]) < self.start_pos_thresh and abs(self.y - self.plan_start[1]) < self.start_pos_thresh)
 
     def snap_to_grid(self, x):
         return (self.plan_resolution*round(x[0]/self.plan_resolution), self.plan_resolution*round(x[1]/self.plan_resolution))

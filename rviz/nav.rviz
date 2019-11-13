@@ -6,8 +6,6 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /Path1
-        - /Path2
         - /TF1/Frames1
         - /TF1/Tree1
       Splitter Ratio: 0.5
@@ -133,21 +131,6 @@ Visualization Manager:
       Topic: /cmd_smoothed_path_rejected
       Unreliable: false
       Value: true
-    - Alpha: 1
-      Axes Length: 1
-      Axes Radius: 0.100000001
-      Class: rviz/Pose
-      Color: 255; 25; 0
-      Enabled: true
-      Head Length: 0.300000012
-      Head Radius: 0.100000001
-      Name: Pose
-      Shaft Length: 1
-      Shaft Radius: 0.0500000007
-      Shape: Arrow
-      Topic: /cmd_path_sp
-      Unreliable: false
-      Value: true
     - Class: rviz/TF
       Enabled: true
       Frame Timeout: 15
@@ -180,6 +163,21 @@ Visualization Manager:
               velodyne:
                 {}
       Update Interval: 0
+      Value: true
+    - Alpha: 1
+      Axes Length: 1
+      Axes Radius: 0.100000001
+      Class: rviz/Pose
+      Color: 255; 25; 0
+      Enabled: true
+      Head Length: 0.100000001
+      Head Radius: 0.0500000007
+      Name: Pose
+      Shaft Length: 0.200000003
+      Shaft Radius: 0.0199999996
+      Shape: Arrow
+      Topic: /move_base_simple/goal
+      Unreliable: false
       Value: true
   Enabled: true
   Global Options:
