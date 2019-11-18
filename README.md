@@ -1,6 +1,6 @@
 # asl_turtlebot
 
-This is the PROJECT branch of the asl_turtlebot repo. This contains a _starting point_ for your final project. There are some files overlapping with those existing in the MASTER branch, but this branch is meant to be an organized collection of files for your project and works in isolation. Below are _brief_ descriptions of the code. You are strongly encouraged to take a closer look into the code for more details of how and what the code does.
+This contains a _starting point_ for your final project. Below are _brief_ descriptions of the code. You are strongly encouraged to take a closer look into the code for more details of how and what the code does.
 
 **File Descriptions:**
 
