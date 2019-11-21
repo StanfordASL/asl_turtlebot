@@ -59,11 +59,10 @@
     <param name="lasamplerange" value="0.005"/>
     <param name="lasamplestep" value="0.005"/>
   </node>
-  
+
 
   <node pkg="asl_turtlebot" type="navigator.py" name="turtlebot_navigator" />
-  <node pkg="asl_turtlebot" type="pose_controller.py" name="turtlebot_pose_controller" />
-  <node pkg="asl_turtlebot" type="cmd_nav_commander.py" name="cmd_nav_commander" />
+  <node pkg="asl_turtlebot" type="goal_commander.py" name="goal_commander" />
   <node pkg="asl_turtlebot" type="detector.py" name="turtlebot_detector" />
 
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find asl_turtlebot)/rviz/project_sim.rviz"/>
