@@ -60,8 +60,6 @@
     <param name="lasamplestep" value="0.005"/>
   </node>
 
-
-  <node pkg="asl_turtlebot" type="navigator.py" name="turtlebot_navigator" />
   <node pkg="asl_turtlebot" type="goal_commander.py" name="goal_commander" />
   <node pkg="asl_turtlebot" type="detector.py" name="turtlebot_detector" />
 

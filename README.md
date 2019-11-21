@@ -6,9 +6,8 @@ This contains a _starting point_ for your final project. Below are _brief_ descr
 
 **Gazebo Simulation Files:**
 ----------------------
-launch/project_sim_pose.launch: Launches gazebo with a (rough, tentative) model of the final project environment. Motion planning not implemented. It goes to /cmd_pose using pose_controller.py (does not avoid obstacles).
 
-launch/project_sim_nav.launch: Launches gazebo with a (rough, tentative) model of the final project environment. Uses navigator.py but you will need to add your implementation of astar.py for this to work. It goes to /cmd_nav by computing a path.
+launch/project_sim.launch: Launches gazebo with a (rough, tentative) model of the final project environment, as well as the core SLAM and detector nodes. You'll need to run your navigator and other project nodes separately.
 
 robots/asl_turtlebot.urdf.xacro, turtlebot3_burger.gazebo.xacro, turtlebot3_burger.urdf.xacro: Turtlebot 3D model definitions for gazebo.
 
