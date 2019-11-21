@@ -46,6 +46,8 @@ scripts/puddle_viz.py: Subscribes to the filtered velodyne points produced by ve
 
 scripts/utils.py: Utility functions. Currently contains a wrapToPi function, but feel free to add to this.
 
+scripts/request_publisher.py: Utility to submit a delivery request. We'll use this to send orders for the project.
+
 ***Files From HW***
 
 scripts/controllers/ should contain P1_pose_stabilization.py and P2_trajectory_tracking.py from HW1
