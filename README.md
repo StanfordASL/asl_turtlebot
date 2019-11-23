@@ -49,7 +49,7 @@ scripts/request_publisher.py: Utility to submit a delivery request. We'll use th
 
 ***Files From HW***
 
-scripts/controllers/ should contain P1_pose_stabilization.py and P2_trajectory_tracking.py from HW1
+scripts/controllers/ should contain P2_pose_stabilization.py and P3_trajectory_tracking.py from HW1
 scripts/planners/ should contain P1_astar.py from HW2
 
 
