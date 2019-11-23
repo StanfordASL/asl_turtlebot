@@ -52,6 +52,7 @@ scripts/request_publisher.py: Utility to submit a delivery request. We'll use th
 scripts/controllers/ should contain P1_pose_stabilization.py and P2_trajectory_tracking.py from HW1
 scripts/planners/ should contain P1_astar.py from HW2
 
+Copy implementation of compute_smoothed_traj from HW2 P3_traj_planning.py into scripts/planners/path_smoother.py
 
 **Message Definitions:**
 
