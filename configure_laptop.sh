@@ -16,7 +16,7 @@ sudo apt-get -qq install python-rosinstall python-rosinstall-generator python-ws
 mkdir -p ~/catkin_ws/src
 cd ~/catkin_ws/
 catkin_make -quiet
-source devel/setup.bash
+echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc
 echo "Check ROS_PACKAGE_PATH below (should be /home/aa274/catkin_ws/src:/opt/ros/melodic/share)"
 echo $ROS_PACKAGE_PATH
 echo "Installing Atom..."
