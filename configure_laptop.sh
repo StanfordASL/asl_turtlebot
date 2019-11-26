@@ -9,7 +9,7 @@ sudo apt install ros-melodic-desktop-full -y
 echo "Done."
 sudo rosdep init
 rosdep update
-echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc 
+echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc
 source ~/.bashrc
 sudo apt-get -qq install ros-melodic-catkin python-catkin-tools -y
 sudo apt-get -qq install python-rosinstall python-rosinstall-generator python-wstool build-essential -y
@@ -18,7 +18,7 @@ cd ~/catkin_ws/
 catkin_make -quiet
 source devel/setup.bash
 echo "Check ROS_PACKAGE_PATH below (should be /home/aa274/catkin_ws/src:/opt/ros/melodic/share)"
-echo $ROS_PACKAGE_PATH 
+echo $ROS_PACKAGE_PATH
 echo "Installing Atom..."
 wget -qO - https://packagecloud.io/AtomEditor/atom/gpgkey | sudo apt-key add -
 sudo sh -c 'echo "deb [arch=amd64] https://packagecloud.io/AtomEditor/atom/any/ any main" > /etc/apt/sources.list.d/atom.list'
@@ -31,15 +31,17 @@ echo "Done."
 echo "Updating Gazebo...."
 sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list'
 wget http://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
-sudo apt-get -qq install gazebo9 -y 
+sudo apt-get -qq install gazebo9 -y
 echo "Done."
 echo "git cloning repos"
 rosrun rqt_reconfigure rqt_reconfigure
+sudo apt-get install ros-melodic-slam-gmapping
+sudo apt-get find ros-melodic-gmapping
 cd ~/catkin_ws/src/
 git clone --quiet https://github.com/StanfordASL/asl_turtlebot.git
-echo "alias rostb3='source ~/catkin_ws/src/asl_turtlebot/rostb3_melodic.sh'" >> ~/.bashrc 
-echo "alias roslocal='source ~/catkin_ws/src/asl_turtlebot/roslocal.sh'" >> ~/.bashrc 
-echo "export TURTLEBOT3_MODEL=burger" >> ~/.bashrc 
+echo "alias rostb3='source ~/catkin_ws/src/asl_turtlebot/rostb3_melodic.sh'" >> ~/.bashrc
+echo "alias roslocal='source ~/catkin_ws/src/asl_turtlebot/roslocal.sh'" >> ~/.bashrc
+echo "export TURTLEBOT3_MODEL=burger" >> ~/.bashrc
 source ~/.bashrc
 rostb3
 cd ~/catkin_ws/src/
