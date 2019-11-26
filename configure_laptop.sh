@@ -35,8 +35,8 @@ sudo apt-get -qq install gazebo9 -y
 echo "Done."
 echo "git cloning repos"
 rosrun rqt_reconfigure rqt_reconfigure
-sudo apt-get install ros-melodic-slam-gmapping
-sudo apt-get find ros-melodic-gmapping
+sudo apt-get -qq install ros-melodic-slam-gmapping -y
+sudo apt-get -qq install ros-melodic-gmapping -y
 cd ~/catkin_ws/src/
 git clone --quiet https://github.com/StanfordASL/asl_turtlebot.git
 echo "alias rostb3='source ~/catkin_ws/src/asl_turtlebot/rostb3_melodic.sh'" >> ~/.bashrc
