@@ -38,6 +38,7 @@ class GoalPoseCommander:
             euler = tf.transformations.euler_from_quaternion(quaternion)
             self.theta_g = euler[2]
             self.start_time = rospy.get_rostime()
+            rospy.loginfo('processed rviz cmd')
 
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
             pass
@@ -50,6 +51,7 @@ class GoalPoseCommander:
             pose_g_msg.y = self.y_g
             pose_g_msg.theta = self.theta_g
             self.nav_goal_publisher.publish(pose_g_msg)
+            rospy.loginfo('published to cmd_nav')	    
         
     def loop(self):
         rate = rospy.Rate(10)

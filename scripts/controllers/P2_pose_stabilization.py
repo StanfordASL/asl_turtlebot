@@ -27,7 +27,7 @@ class PoseController:
         Inputs:
             x,y,th: Current state
             t: Current time (you shouldn't need to use this)
-        Outputs:
+        Outputs: 
             V, om: Control actions
 
         Hints: You'll need to use the wrapToPi function. The np.sinc function
