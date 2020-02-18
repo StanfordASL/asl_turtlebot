@@ -18,11 +18,23 @@
     <arg name="gui" value="$(arg gui)"/>
   </include>
 
-  <param name="robot_description" command="$(find xacro)/xacro.py $(find asl_turtlebot)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+  <param name="robot_description" command="$(find xacro)/xacro.py $(find asl_turtlebot)/urdf/turtlebot3_$(arg model)_gripper.urdf.xacro" />
 
   <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model turtlebot3_burger -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -param robot_description" />
 
-  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+  <!-- Load joint controller configurations from YAML file to parameter server -->
+  <rosparam file="$(find asl_turtlebot)/cfg/gripper_control.yaml" command="load"/>
+
+  <!-- load the controllers -->
+  <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
+    output="screen" ns="/gripper" args="right_gripper_controller left_gripper_controller joint_state_controller"/>
+
+  <node pkg="asl_turtlebot" type="gripper_sim_controller.py" name="gripper_sim_controller" />
+
+  <!-- convert joint states to TF transforms for rviz, etc -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"
+    respawn="false" output="screen">
+    <remap from="/joint_states" to="/turtlebot3_burger/joint_states" />
     <param name="publish_frequency" type="double" value="10.0" />
   </node>
 
