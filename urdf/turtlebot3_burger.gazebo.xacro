@@ -169,4 +169,22 @@
     </sensor>
   </gazebo>
 
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>/gripper</robotNamespace>
+    </plugin>
+  </gazebo>
+  <gazebo reference="right_gripper">
+    <mu1>1</mu1>
+    <mu2>1</mu2>
+    <minDepth>0.003</minDepth>
+    <maxVel>0</maxVel>
+  </gazebo>
+  <gazebo reference="left_gripper">
+    <mu1>1</mu1>
+    <mu2>1</mu2>
+    <minDepth>0.003</minDepth>
+    <maxVel>0</maxVel>
+  </gazebo>
+
 </robot>
