@@ -175,16 +175,18 @@
     </plugin>
   </gazebo>
   <gazebo reference="right_gripper">
-    <mu1>1</mu1>
-    <mu2>1</mu2>
-    <minDepth>0.003</minDepth>
-    <maxVel>0</maxVel>
+    <mu1>10</mu1>
+    <mu2>10</mu2>
+    <kd>10.0</kd>
+    <minDepth>0.001</minDepth>
+    <maxVel>0.1</maxVel>
   </gazebo>
   <gazebo reference="left_gripper">
-    <mu1>1</mu1>
-    <mu2>1</mu2>
-    <minDepth>0.003</minDepth>
-    <maxVel>0</maxVel>
+    <mu1>10</mu1>
+    <mu2>10</mu2>
+    <kd>10.0</kd>
+    <minDepth>0.001</minDepth>
+    <maxVel>0.1</maxVel>
   </gazebo>
 
 </robot>
