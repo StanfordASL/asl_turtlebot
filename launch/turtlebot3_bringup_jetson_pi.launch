@@ -1,10 +1,13 @@
 <launch>
     <include file="$(find turtlebot3_bringup)/launch/turtlebot3_core.launch" />
     <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch" />
+    <arg name="redis" default="aa274-ginger.local"/>
 
     <machine name="pi" address="$(env PI_HOSTNAME)" env-loader="~/catkin_ws/devel/env_pi.sh" user="aa274" password="aa274" />
 
     <node pkg="topic_tools" type="throttle" name="velodyne_throttler" args="messages /velodyne_points 3" />
+
+    <node machine="pi" type="gripper_subscriber.py" pkg ="asl_turtlebot" name="gripper_subscriber" />
 
     <node machine="pi" type="raspicam_node" pkg="raspicam_node" name="raspicam_node" output="screen">
 
@@ -19,7 +22,10 @@
         <param name="camera_frame_id" value="raspicam"/>
     </node>
 
+
     <node pkg="asl_turtlebot" type="camera_relay.py" name="camera_relay"/>
+
+    <node pkg="asl_turtlebot" type="redis_relay.py" name="redis_relay" args="$(arg redis)" />
 
     <node pkg="gmapping" type="slam_gmapping" name="turtlebot3_slam_gmapping" output="screen">
         <param name="base_frame" value="base_footprint"/>
