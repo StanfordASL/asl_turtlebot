@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import argparse
 import multiprocessing
 import signal
 import time
@@ -12,7 +13,10 @@ from cv_bridge import CvBridge
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import CompressedImage
 
-def servo(img, cx_des=0.43, cy_des=0.9, gain_V=0.1, gain_om=1.):
+CX_DES, CY_DES = (0.43, 0.9)
+GAIN_V, GAIN_OM = (0.1, 1.)
+
+def servo(img, cx_des=CX_DES, cy_des=CY_DES, gain_V=GAIN_V, gain_om=GAIN_OM):
     """
     Return control commands (V, om) to servo towards the pink flag base given an
     input image. If no flag base is detected, returns 0.
@@ -76,19 +80,21 @@ class VisualServo:
         vs.join()
     """
 
-    def __init__(self):
+    def __init__(self, cx_des=CX_DES, cy_des=CY_DES, gain_V=GAIN_V, gain_om=GAIN_OM):
         self.control_command = multiprocessing.Array('d', (0., 0.))
-        self.p = multiprocessing.Process(target=self._worker, args=(self.control_command,))
+        self.p = multiprocessing.Process(target=self._worker,
+                                         args=(self.control_command, cx_des,
+                                               cy_des, gain_V, gain_om))
 
     @staticmethod
-    def _worker(control_command):
+    def _worker(control_command, cx_des, cy_des, gain_V, gain_om):
         print("Starting visual servo worker")
         rospy.init_node('visual_servo_worker')
         bridge = CvBridge()
 
         def camera_callback(msg):
             img = bridge.compressed_imgmsg_to_cv2(msg, 'bgr8')
-            V, om = servo(img)
+            V, om = servo(img, cx_des, cy_des, gain_V, gain_om)
             control_command[0] = V
             control_command[1] = om
 
@@ -117,15 +123,20 @@ class VisualServo:
         return V, om
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('pub_topic', default='/cmd_vel',
+                        help="ROS topic to publish the command velocities")
+    args = parser.parse_args(rospy.myargv()[1:])
+
     is_running = [True]
 
     # Initialize visual servo
-    vs = VisualServo()
+    vs = VisualServo(CX_DES, CY_DES, GAIN_V, GAIN_OM)
     vs.start()
 
     # Initialize ROS node
     rospy.init_node('visual_servo')
-    pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
+    pub = rospy.Publisher(args.pub_topic, Twist, queue_size=10)
 
     # Ctrl-c handler
     def ctrl_c_handler(signal, frame):
