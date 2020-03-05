@@ -437,7 +437,7 @@ def update_maps(agents, redis_hostname):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--redis', default=socket.gethostname(), help="Hostname of Redis master")
+    parser.add_argument('--redis', default="{}.local".format(socket.gethostname()), help="Hostname of Redis master")
     parser.add_argument('--robots', nargs='+', help="Names of turtlebots", required=True)
     args = parser.parse_args()
     # img_0 = normalize_image(cv.imread('map0.png')[:,:,0])
