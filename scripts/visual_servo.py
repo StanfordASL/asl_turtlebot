@@ -28,8 +28,8 @@ def servo(img, cx_des=CX_DES, cy_des=CY_DES, gain_V=GAIN_V, gain_om=GAIN_OM):
                   (0.0 is left side, 1.0 is right side).
         cy_des  - desired vertical position of the flag in the image
                   (0.0 is top, 1.0 is bottom).
-        gain_V  - error gain for V.
-        gain_om - error gain for om.
+        gain_V  - error gain for V (higher means faster convergence).
+        gain_om - error gain for om (higher means faster convergence).
 
     Return:
         V  - command linear velocity.
