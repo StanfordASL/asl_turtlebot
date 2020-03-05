@@ -124,14 +124,22 @@ class VisualServo:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('pub_topic', default='/cmd_vel',
+    parser.add_argument('pub_topic', nargs='?', default='/cmd_vel',
                         help="ROS topic to publish the command velocities")
+    parser.add_argument('--cx_des', default=CX_DES, type=float,
+                        help="Desired horizontal position of the flag in the image")
+    parser.add_argument('--cy_des', default=CY_DES, type=float,
+                        help="Desired vertical position of the flag in the image")
+    parser.add_argument('--gain_V', default=GAIN_V, type=float,
+                        help="Error gain for V")
+    parser.add_argument('--gain_om', default=GAIN_OM, type=float,
+                        help="Error gain for om")
     args = parser.parse_args(rospy.myargv()[1:])
 
     is_running = [True]
 
     # Initialize visual servo
-    vs = VisualServo(CX_DES, CY_DES, GAIN_V, GAIN_OM)
+    vs = VisualServo(args.cx_des, args.cy_des, args.gain_V, args.gain_om)
     vs.start()
 
     # Initialize ROS node
