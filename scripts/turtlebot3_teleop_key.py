@@ -130,7 +130,7 @@ if __name__=="__main__":
 
     rospy.init_node('turtlebot3_teleop')
     pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
-    pub_gripper = rospy.Publisher('gripper_pose', Int8, queue_size=10)
+    pub_gripper = rospy.Publisher('gripper_pose_remote', Int8, queue_size=10)
 
     turtlebot3_model = rospy.get_param("model", "burger")
 
@@ -171,22 +171,18 @@ if __name__=="__main__":
                 target_gripper = checkGripper(GRIPPER_OPEN)
                 pub_gripper.publish(target_gripper)
                 print vels(target_linear_vel, target_angular_vel, target_gripper)
-                continue
             elif key == 'c':
                 target_gripper = checkGripper(GRIPPER_CLOSED)
                 pub_gripper.publish(target_gripper)
                 print vels(target_linear_vel, target_angular_vel, target_gripper)
-                continue
             elif key == 'k':
                 target_gripper = checkGripper(target_gripper + GRIPPER_STEP_SIZE)
                 pub_gripper.publish(target_gripper)
                 print vels(target_linear_vel, target_angular_vel, target_gripper)
-                continue
             elif key == 'j':
                 target_gripper = checkGripper(target_gripper - GRIPPER_STEP_SIZE)
                 pub_gripper.publish(target_gripper)
                 print vels(target_linear_vel, target_angular_vel, target_gripper)
-                continue
             else:
                 if (key == '\x03'):
                     break
