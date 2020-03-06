@@ -22,12 +22,7 @@
         <param name="camera_frame_id" value="raspicam"/>
     </node>
 
-<<<<<<< HEAD
     <node pkg="asl_turtlebot" type="camera_transform_relay.py" name="camera_relay"/>
-=======
-
-    <node pkg="asl_turtlebot" type="camera_relay.py" name="camera_relay"/>
->>>>>>> 736ff3a25457519273497823cdcfba30a09e5d44
 
     <node pkg="asl_turtlebot" type="redis_relay.py" name="redis_relay" args="$(arg redis)" />
 
