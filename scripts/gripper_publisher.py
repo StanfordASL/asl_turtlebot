@@ -1,27 +1,21 @@
 #!/usr/bin/env python
+
 import rospy
-import sys
 from std_msgs.msg import Int8
 
-def gripper_publisher(pwm):
-	rospy.loginfo("Starting....")
-	pub = rospy.Publisher('gripper_pose', Int8, queue_size = 10)
-	rospy.init_node('gripper_publisher', anonymous = True)
-	rate = rospy.Rate(10)
-	#while not rospy.is_shutdown():
-	pub.publish(pwm)
-	rate.sleep()
+MIN_WIDTH = 0
+MAX_WIDTH = 100
 
 if __name__ == '__main__':
-	try:
-		while(1):
-			key = int(input("Enter 1 to close and 0 to open the gripper : "))
-			if key == 1:
-				gripper_publisher(0)
-			elif key == 0:
-				gripper_publisher(100)
-			else:
-				sys.exit()
-			print("")
-	except:
-		pass
+    rospy.init_node('gripper_publisher')
+    pub = rospy.Publisher('gripper_pose_remote', Int8, queue_size=1)
+
+    while not rospy.is_shutdown():
+        str_input = input("Enter gripper width (0-100): ")
+        try:
+            width = int(str_input)
+            width = min(MAX_WIDTH, max(MIN_WIDTH, width))
+            print("Sending {}.".format(width))
+            pub.publish(width)
+        except:
+            print("Enter a valid number (received {}).".format(str_input))
