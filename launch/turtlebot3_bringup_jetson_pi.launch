@@ -26,6 +26,8 @@
 
     <node pkg="asl_turtlebot" type="redis_relay.py" name="redis_relay" args="$(arg redis)" />
 
+    <node pkg="asl_turtlebot" type="gripper_relay.py" name="gripper_relay"/>
+
     <node pkg="gmapping" type="slam_gmapping" name="turtlebot3_slam_gmapping" output="screen">
         <param name="base_frame" value="base_footprint"/>
         <param name="odom_frame" value="odom"/>
