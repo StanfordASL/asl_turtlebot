@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+#Karen May Wang (kmwang14@stanford.edu)
+#10/29/20
+
 from enum import Enum
 
 import rospy
@@ -259,11 +262,19 @@ class Supervisor:
 
         elif self.mode == Mode.STOP:
             # At a stop sign
-            self.nav_to_pose()
-
+            while True:
+                self.stay_idle()
+                if self.has_stopped():
+                    self.init_crossing()
+                    break
+             
         elif self.mode == Mode.CROSS:
             # Crossing an intersection
-            self.nav_to_pose()
+            while True:
+                self.go_to_pose()
+                if self.has_crossed():
+                    self.mode = Mode.NAV
+                    break
 
         elif self.mode == Mode.NAV:
             if self.close_to(self.x_g, self.y_g, self.theta_g):
