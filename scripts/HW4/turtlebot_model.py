@@ -63,8 +63,8 @@ def compute_dynamics(xvec, u, dt, compute_jacobians=True):
                       [0,         dt]])
 
     else:
-       Gu = np.array([[ (1./om)*(np.sin(g[2])-np.sin(th)), -(V/om**2)*(np.sin(g[2])-np.sin(th)) + (V/om)*np.cos(g[2])*dt],
-                      [-(1./om)*(np.cos(g[2])-np.cos(th)),  (V/om**2)*(np.cos(g[2])-np.cos(th)) + (V/om)*np.sin(g[2])*dt],
+       Gu = np.array([[ (1./om)*(np.sin(g[2])-np.sin(th)), -(V/om**2)*(np.sin(g[2])-np.sin(th))],
+                      [-(1./om)*(np.cos(g[2])-np.cos(th)),  (V/om**2)*(np.cos(g[2])-np.cos(th))],
                       [0,         dt]])
     ########## Code ends here ##########
 
