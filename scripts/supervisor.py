@@ -230,7 +230,7 @@ class Supervisor:
 
         if not self.params.use_gazebo:
             try:
-                origin_frame = "/map" if mapping else "/odom"
+                origin_frame = "/map" if self.params.mapping else "/odom"
                 translation, rotation = self.trans_listener.lookupTransform(origin_frame, '/base_footprint', rospy.Time(0))
                 self.x, self.y = translation[0], translation[1]
                 self.theta = tf.transformations.euler_from_quaternion(rotation)[2]
