@@ -36,8 +36,10 @@ def compute_dynamics(xvec, u, dt, compute_jacobians=True):
     #update om first
     g[2] = th + om*dt
     if abs(om) < EPSILON_OMEGA:
-       g[0] = x + V*np.cos(g[2])*dt 
-       g[1] = y + V*np.sin(g[2])*dt
+       #g[0] = x + V*np.cos(g[2])*dt 
+       #g[1] = y + V*np.sin(g[2])*dt
+       g[0] = x + (V/2.0)*(np.cos(th) + np.cos(g[2]))*dt
+       g[1] = y + (V/2.0)*(np.sin(th) + np.sin(g[2]))*dt
     else:
        g[0] = x + (V/om)*(np.sin(g[2]) - np.sin(th)) 
        g[1] = y - (V/om)*(np.cos(g[2]) - np.cos(th))
@@ -49,6 +51,9 @@ def compute_dynamics(xvec, u, dt, compute_jacobians=True):
        Gx = np.array([[1.0,   0.0,  -V*np.sin(g[2])*dt],
                       [0.0,    1.0,  V*np.cos(g[2])*dt],
                       [0.0,    0.0,  1.0]])
+       #Gx = np.array([[1.0,   0.0,  -(V/2.0)*(np.sin(g[2]))*dt],
+       #               [0.0,    1.0,  (V/2.0)*(np.cos(g[2]))*dt],
+       #               [0.0,    0.0,  1.0]])
     else:
        Gx = np.array([[1.0,   0.0,  (V/om)*(np.cos(g[2])-np.cos(th))],
                       [0.0,    1.0, (V/om)*(np.sin(g[2])-np.sin(th))],
@@ -58,10 +63,12 @@ def compute_dynamics(xvec, u, dt, compute_jacobians=True):
     # [dg[1]/dV, dg[1]/dom]
     # [dg[2]/dV, dg[2]/dom]
     if abs(om) < EPSILON_OMEGA:
-       Gu = np.array([[ np.cos(g[2])*dt, -V*np.sin(g[2])*dt**2],
-                      [np.sin(g[2])*dt,  V*np.cos(g[2])*dt**2],
+       #Gu = np.array([[ np.cos(g[2])*dt, -V*np.sin(g[2])*dt**2],
+       #               [np.sin(g[2])*dt,   V*np.cos(g[2])*dt**2],
+       #               [0,         dt]])
+       Gu = np.array([[ 0.5*(np.cos(th) + np.cos(g[2]))*dt, -(V/2.0)*np.sin(g[2])*dt**2],
+                      [ 0.5*(np.sin(th) + np.sin(g[2]))*dt,  (V/2.0)*np.cos(g[2])*dt**2],
                       [0,         dt]])
-
     else:
        Gu = np.array([[ (1./om)*(np.sin(g[2])-np.sin(th)), -(V/om**2)*(np.sin(g[2])-np.sin(th)) + (V/om)*np.cos(g[2])*dt],
                       [-(1./om)*(np.cos(g[2])-np.cos(th)),  (V/om**2)*(np.cos(g[2])-np.cos(th)) + (V/om)*np.sin(g[2])*dt],

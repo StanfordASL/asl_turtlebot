@@ -306,7 +306,7 @@ class EkfSlam(Ekf):
         # TODO: Compute g, Gx, Gu.
         # HINT: This should be very similar to EkfLocalization.transition_model() and take 1-5 lines of code.
         # HINT: Call tb.compute_dynamics() with the correct elements of self.x
-        g, Gx[0:3,0:3], Gu[0:3,0:2] = tb.compute_dynamics(self.x[0:3], u, dt, compute_jacobians=True)
+        g[:3], Gx[0:3,0:3], Gu[0:3,0:2] = tb.compute_dynamics(self.x[0:3], u, dt, compute_jacobians=True)
         ########## Code ends here ##########
 
         return g, Gx, Gu
