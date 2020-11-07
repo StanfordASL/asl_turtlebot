@@ -48,12 +48,9 @@ def compute_dynamics(xvec, u, dt, compute_jacobians=True):
     # [dg[1]/dx, dg[1]/dy, dg[1]/dth]
     # [dg[2]/dx, dg[2]/dy, dg[2]/dth]
     if abs(om) < EPSILON_OMEGA:
-       Gx = np.array([[1.0,   0.0,  -V*np.sin(g[2])*dt],
-                      [0.0,    1.0,  V*np.cos(g[2])*dt],
+       Gx = np.array([[1.0,   0.0,  -(V/2.0)*(np.sin(th) + np.sin(g[2]))*dt],
+                      [0.0,    1.0,  (V/2.0)*(np.cos(th) + np.cos(g[2]))*dt],
                       [0.0,    0.0,  1.0]])
-       #Gx = np.array([[1.0,   0.0,  -(V/2.0)*(np.sin(g[2]))*dt],
-       #               [0.0,    1.0,  (V/2.0)*(np.cos(g[2]))*dt],
-       #               [0.0,    0.0,  1.0]])
     else:
        Gx = np.array([[1.0,   0.0,  (V/om)*(np.cos(g[2])-np.cos(th))],
                       [0.0,    1.0, (V/om)*(np.sin(g[2])-np.sin(th))],
@@ -63,9 +60,6 @@ def compute_dynamics(xvec, u, dt, compute_jacobians=True):
     # [dg[1]/dV, dg[1]/dom]
     # [dg[2]/dV, dg[2]/dom]
     if abs(om) < EPSILON_OMEGA:
-       #Gu = np.array([[ np.cos(g[2])*dt, -V*np.sin(g[2])*dt**2],
-       #               [np.sin(g[2])*dt,   V*np.cos(g[2])*dt**2],
-       #               [0,         dt]])
        Gu = np.array([[ 0.5*(np.cos(th) + np.cos(g[2]))*dt, -(V/2.0)*np.sin(g[2])*dt**2],
                       [ 0.5*(np.sin(th) + np.sin(g[2]))*dt,  (V/2.0)*np.cos(g[2])*dt**2],
                       [0,         dt]])
