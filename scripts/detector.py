@@ -158,10 +158,21 @@ class Detector:
         that is a unit vector in the direction of the pixel, in the camera frame """
 
         ########## Code starts here ##########
+        # See Lecture 9, 9.1.1
+        # Since it is in the camera frame (x, y, z) = (Xc, Yc, Zc)
+        # See equation 6, set Zc =  alpha
         # TODO: Compute x, y, z.
-        x = 0.
-        y = 0.
-        z = 1.
+        #z = self.fx
+        #x = ((u - self.cx)/self.fx)*z
+        #y = ((v - self.cy)/self.fy)*z
+        x_unnormalized =  ((u - self.cx)/self.fx)
+        y_unnormalized =  ((v - self.cy)/self.fy)
+        z_unnormalized = 1.0
+        pixel_dir = np.array([x_unnormalized,y_unnormalized,z_unnormalized])
+        pixel_dir_norm = pixel_dir/np.linalg.norm(pixel_dir)
+        x = pixel_dir_norm[0]
+        y = pixel_dir_norm[1]
+        z = pixel_dir_norm[2]
         ########## Code ends here ##########
 
         return x, y, z
@@ -258,10 +269,14 @@ class Detector:
 
         ########## Code starts here ##########
         # TODO: Extract camera intrinsic parameters.
-        self.cx = 0.
-        self.cy = 0.
-        self.fx = 1.
-        self.fy = 1.
+
+	# CameraInfo.msg.K [1 x 9] array http://docs.ros.org/api/sensor_msgs/html/msg/CameraInfo.html
+
+        self.cx = msg.K[2]
+        self.cy = msg.K[5]
+        self.fx = msg.K[0]
+        self.fy = msg.K[4]
+
         ########## Code ends here ##########
 
     def laser_callback(self, msg):
