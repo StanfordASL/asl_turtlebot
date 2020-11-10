@@ -75,7 +75,7 @@ class Supervisor:
         self.theta_g = 0
 
         # Current mode
-        self.mode = Mode.IDLE
+        self.mode = Mode.NAV #Mode.IDLE
         self.prev_mode = None  # For printing purposes
 
         ########## PUBLISHERS ##########
@@ -250,6 +250,9 @@ class Supervisor:
         #       at the stop sign.
 
         if self.mode == Mode.IDLE:
+            #to transition out of idle to get going
+            if self.prev_mode == None:
+                self.mode = Mode.NAV
             # Send zero velocity
             self.stay_idle()
 
