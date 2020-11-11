@@ -11,7 +11,7 @@
   <rosparam param="use_tf">false</rosparam>
 
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(find asl_turtlebot)/world/project_city.world"/>
+    <arg name="world_name" value="$(find asl_turtlebot)/world/project_city_added_food.world"/>
     <arg name="paused" value="false"/>
     <arg name="use_sim_time" value="true"/>
     <arg name="debug" value="false"/>
@@ -71,7 +71,7 @@
     <param name="lasamplerange" value="0.005"/>
     <param name="lasamplestep" value="0.005"/>
   </node>
-
+  
   <node pkg="asl_turtlebot" type="goal_commander.py" name="goal_commander" />
   <node pkg="asl_turtlebot" type="detector.py" name="turtlebot_detector" />
 
