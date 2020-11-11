@@ -91,7 +91,7 @@ class PoseControllerNode:
     def cmd_pose_callback(self, msg):
         ########## Code starts here ##########
         # TODO: Update the goal pose in the pose controller.
-        cmd = controller.load_goal(msg.x,msg.y,msg.theta)
+        self.controller.load_goal(msg.x,msg.y,msg.theta)
         ########## Code ends here ##########
 
         # Record time of pose update
