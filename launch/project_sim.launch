@@ -3,7 +3,7 @@
   <arg name="x_pos" default="3.15"/>
   <arg name="y_pos" default="1.6"/>
   <arg name="z_pos" default="0.0"/>
-  <arg name="gui" default="false"/>
+  <arg name="gui" default="true"/>
 
 
   <rosparam param="sim">false</rosparam>
@@ -11,7 +11,7 @@
   <rosparam param="use_tf">true</rosparam>
 
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(find asl_turtlebot)/world/project_city.world"/>
+    <arg name="world_name" value="$(find asl_turtlebot)/world/project_city_added_vendors.world"/>
     <arg name="paused" value="false"/>
     <arg name="use_sim_time" value="true"/>
     <arg name="debug" value="false"/>
@@ -71,9 +71,10 @@
     <param name="lasamplerange" value="0.005"/>
     <param name="lasamplestep" value="0.005"/>
   </node>
-
+  
   <node pkg="asl_turtlebot" type="goal_commander.py" name="goal_commander" />
   <node pkg="asl_turtlebot" type="detector.py" name="turtlebot_detector" />
+  <node pkg="asl_turtlebot" type="navigator.py" name="turtlebot_navigator" output="screen"/>
 
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find asl_turtlebot)/rviz/project_sim.rviz"/>
 </launch>

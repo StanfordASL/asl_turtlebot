@@ -3,6 +3,7 @@
 import rospy
 from nav_msgs.msg import OccupancyGrid, MapMetaData, Path
 from geometry_msgs.msg import Twist, Pose2D, PoseStamped
+from asl_turtlebot.msg import DetectedObject
 from std_msgs.msg import String
 import tf
 import numpy as np
@@ -17,6 +18,8 @@ from enum import Enum
 
 from dynamic_reconfigure.server import Server
 from asl_turtlebot.cfg import NavigatorConfig
+
+import pdb
 
 # state machine modes, not all implemented
 class Mode(Enum):
@@ -45,6 +48,9 @@ class Navigator:
         self.theta_g = None
 
         self.th_init = 0.0
+
+        #dictionary to hold  locations of food items
+        self.food_locations = {}
 
         # map parameters
         self.map_width = 0
@@ -107,8 +113,22 @@ class Navigator:
         rospy.Subscriber('/map_metadata', MapMetaData, self.map_md_callback)
         rospy.Subscriber('/cmd_nav', Pose2D, self.cmd_nav_callback)
 
+        #Karen Added
+        rospy.Subscriber('/detector/donut', DetectedObject, self.object_callback)
         print "finished init"
-        
+
+    def object_callback(self, data):
+        #when an  object is detected, we compute the location of the object and store it as a dictionary
+        NAME  = data.name
+        dist  = data.distance
+        th_diff = 0.5*(data.thetaleft - data.thetaright)
+        th_center = data.thetaleft -  th_diff
+        food_loc_x  = self.x + dist*np.cos(th_center)
+        food_loc_y  = self.y + dist*np.sin(th_center)
+        LOCATIONS  =  (food_loc_x,food_loc_y)
+        #compute  location of food detected
+        self.food_locations[NAME] = LOCATIONS
+    
     def dyn_cfg_callback(self, config, level):
         rospy.loginfo("Reconfigure Request: k1:{k1}, k2:{k2}, k3:{k3}".format(**config))
         self.pose_controller.k1 = config["k1"]
@@ -121,6 +141,9 @@ class Navigator:
         loads in goal if different from current goal, and replans
         """
         if data.x != self.x_g or data.y != self.y_g or data.theta != self.theta_g:
+
+            print('cmd_nav_callback goal:', self.x_g)
+
             self.x_g = data.x
             self.y_g = data.y
             self.theta_g = data.theta
@@ -168,6 +191,7 @@ class Navigator:
         returns whether the robot is close enough in position to the goal to
         start using the pose controller
         """
+        #print('near_goal state and goal: ', self.x, self.x_g, self.y, self.y_g )
         return linalg.norm(np.array([self.x-self.x_g, self.y-self.y_g])) < self.near_thresh
 
     def at_goal(self):
@@ -175,6 +199,11 @@ class Navigator:
         returns whether the robot has reached the goal position with enough
         accuracy to return to idle state
         """
+        #print('at_goal state and goal: ', self.x, self.x_g, self.y, self.y_g )
+	# *** Added G.S. 10/28/20***
+        if self.x_g is None :
+            return (True)
+        # **************************
         return (linalg.norm(np.array([self.x-self.x_g, self.y-self.y_g])) < self.near_thresh and abs(wrapToPi(self.theta - self.theta_g)) < self.at_thresh_theta)
 
     def aligned(self):
@@ -237,6 +266,8 @@ class Navigator:
             V = 0.
             om = 0.
 
+        #print('V om ', V, om)
+
         cmd_vel = Twist()
         cmd_vel.linear.x = V
         cmd_vel.angular.z = om
@@ -269,6 +300,9 @@ class Navigator:
         x_init = self.snap_to_grid((self.x, self.y))
         self.plan_start = x_init
         x_goal = self.snap_to_grid((self.x_g, self.y_g))
+
+	print('x_goal ',x_goal)
+
         problem = AStar(state_min,state_max,x_init,x_goal,self.occupancy,self.plan_resolution)
 
         rospy.loginfo("Navigator: computing navigation plan")
@@ -282,7 +316,7 @@ class Navigator:
         
 
         # Check whether path is too short
-        if len(planned_path) < 4:
+        if len(planned_path) < 2:
             rospy.loginfo("Path too short to track")
             self.switch_mode(Mode.PARK)
             return
@@ -310,6 +344,9 @@ class Navigator:
         self.publish_smoothed_path(traj_new, self.nav_smoothed_path_pub)
 
         self.pose_controller.load_goal(self.x_g, self.y_g, self.theta_g)
+
+        print('pose_controller.load_goal:', self.x_g)
+
         self.traj_controller.load_traj(t_new, traj_new)
 
         self.current_plan_start_time = rospy.get_rostime()
@@ -363,6 +400,9 @@ class Navigator:
             elif self.mode == Mode.PARK:
                 if self.at_goal():
                     # forget about goal:
+
+                    print('Fahgetaboutit')
+
                     self.x_g = None
                     self.y_g = None
                     self.theta_g = None

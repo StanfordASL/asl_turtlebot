@@ -58,49 +58,18 @@ class TrajectoryTracker:
         x_d, xd_d, xdd_d, y_d, yd_d, ydd_d = self.get_desired_state(t)
 
         ########## Code starts here ##########
-        #V = 0
-        #om = 0
-        
-        V_t = self.V_prev
-            
-        # get velocity components for feedback
-        
-        xdot = V_t * np.cos( th )
-        ydot = V_t * np.sin( th )
-        
-        # compute virtual controls
-        
-        #u = np.zeros( (2,1) )
-        
-        #u[0] = xdd_d + self.kpx * ( x_d - x ) + self.kdx * ( xd_d - xdot )
-        #u[1] = ydd_d + self.kpy * ( y_d - y ) + self.kdy * ( yd_d - ydot )
-        u0 = xdd_d + self.kpx * ( x_d - x ) + self.kdx * ( xd_d - xdot )
-        u1 = ydd_d + self.kpy * ( y_d - y ) + self.kdy * ( yd_d - ydot )
-        u = np.array( [ u0, u1 ] , dtype = float )
-
-        # check for zero velocity
-        
+        #reset to nominal velocity if velocity drops below the threshold
         if np.abs(self.V_prev) < V_PREV_THRES:
-        #    V_t = np.sqrt( xd_d**2.0 + yd_d**2.0 ) * np.sign( self.V_prev )
-        #    V_t = V_PREV_THRES * np.sign( self.V_prev )
-            V_t = V_PREV_THRES
-           
-        # transform virtual controls to actual controls
-        
-        #print('u=',u)
-        #print('V_t=',V_t)
-
-        ct = np.cos( th )
-        st = np.sin( th )
-        invJ = np.array( [[ ct, st ], [ -st / V_t, ct / V_t ]] )
-        q = np.matmul( invJ, u )
-        Vdot = q[0]
-        om = q[1]
-        
-        # integrate acceleration control to get velocity control
-        
-        V = self.V_prev + dt * Vdot
-        
+            NOMINAL_VELOCITY = np.sqrt(xd_d**2 + yd_d**2)
+            self.V_prev = NOMINAL_VELOCITY 
+        #virtual control law
+        xd = self.V_prev*np.cos(th)
+        yd = self.V_prev*np.sin(th)
+        u1 = xdd_d + self.kpx*(x_d - x) + self.kdx*(xd_d - xd)
+        u2 = ydd_d + self.kpy*(y_d - y) + self.kdy*(yd_d - yd)
+        a  = np.cos(th)*u1 + np.sin(th)*u2
+        om = -(np.sin(th)/self.V_prev)*u1 + (np.cos(th)/self.V_prev)*u2
+        V = self.V_prev + a*dt
         ########## Code ends here ##########
 
         # apply control limits
