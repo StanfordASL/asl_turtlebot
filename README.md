@@ -18,14 +18,14 @@ world/project_city.world: Defines 3D model of rough, tentative representation of
 ----------------------
 **Launch Files:**
 
-launch/turtlebot3_bringup_jetson_pi.launch: Launches the core elements of the turtlebot stack (turtlebot drivers, camera, lidar, gmapping, static tf transforms). This should run onboard the jetson.
+<Not required for Fall 2020> launch/turtlebot3_bringup_jetson_pi.launch: Launches the core elements of the turtlebot stack (turtlebot drivers, camera, lidar, gmapping, static tf transforms). This should run onboard the jetson.
 
 launch/velodyne_filter.launch: An example of how to filter the point cloud based on spatial coordinates and reflected beam intensity. This is used in conjunction with puddle_viz.py. You can run "rosrun rqt_reconfigure rqt_reconfigure" to change the threshold parameters online.
 
 
 **Scripts/Nodes:**
 
-scripts/camera_relay.py: Due to networking limitations, your remote machine cannot access messages directly from the raspberry pi. This node forwards images from the raspberry pi via the jetson to the remote machine.
+<Not required for Fall 2020> scripts/camera_relay.py: Due to networking limitations, your remote machine cannot access messages directly from the raspberry pi. This node forwards images from the raspberry pi via the jetson to the remote machine.
 
 scripts/goal_commander.py: Translates Rviz nav goal clicks (/move_simple_base/goal) to the /cmd_nav topic.
 
