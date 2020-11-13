@@ -52,7 +52,7 @@ class GoalPoseCommander:
             self.nav_goal_publisher.publish(pose_g_msg)
         
     def loop(self):
-        rate = rospy.Rate(10)
+        rate = rospy.Rate(20)
         while not rospy.is_shutdown():
             t = rospy.get_rostime()
             if (t - self.start_time).to_sec() < 2.0:
