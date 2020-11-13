@@ -316,7 +316,8 @@ class Navigator:
         
 
         # Check whether path is too short
-        if len(planned_path) < 2:
+        #if len(planned_path) < 2:   #********* changed KW 11-12-2020 *******
+        if len(planned_path) < 4:    #********* changed back GS 11-13-2020 ****
             rospy.loginfo("Path too short to track")
             self.switch_mode(Mode.PARK)
             return
