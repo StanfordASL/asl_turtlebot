@@ -71,11 +71,13 @@ class MarkerPublisher:
         rate = rospy.Rate(10)
         while not rospy.is_shutdown():
             #continuously publish markers 
-            for marker_name in self.marker_publishers:
-                self.marker_publishers[marker_name].publish(self.marker_info[marker_name])
+            if len(self.marker_publishers) != 0:
+                for marker_name in self.marker_publishers:
+                    self.marker_publishers[marker_name].publish(self.marker_info[marker_name])
             #print('Published marker!')
 
             #continuously publish list of detected objects and  locations
+            if self.msg_detected_obj is not None:
             self.ob_list_pub.publish(self.msg_detected_obj)
             rate.sleep()
 
