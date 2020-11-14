@@ -1045,7 +1045,7 @@
         <visual name='visual'>
           <geometry>
             <box>
-              <size>0.001 0.1 0.065</size>
+              <size>0.001 0.2 0.13</size>
             </box>
           </geometry>
           <material>
@@ -1215,7 +1215,7 @@
         <visual name='visual'>
           <geometry>
             <box>
-              <size>0.001 0.1 0.065</size>
+              <size>0.001 0.2 0.13</size>
             </box>
           </geometry>
           <material>
@@ -1384,7 +1384,7 @@
         <visual name='visual'>
           <geometry>
             <box>
-              <size>0.001 0.1 0.065</size>
+              <size>0.001 0.2 0.13</size>
             </box>
           </geometry>
           <material>
@@ -1553,7 +1553,7 @@
         <visual name='visual'>
           <geometry>
             <box>
-              <size>0.001 0.1 0.065</size>
+              <size>0.001 0.2 0.13</size>
             </box>
           </geometry>
           <material>
@@ -1722,14 +1722,14 @@
         <visual name='visual'>
           <geometry>
             <box>
-              <size>0.001 0.1 0.065</size>
+              <size>0.001 0.2 0.13</size>
             </box>
           </geometry>
           <material>
             <script>
-              <uri>model://vendor4/materials/scripts</uri>
-              <uri>model://vendor4/materials/textures</uri>
-              <name>Vendor4/Diffuse</name>
+              <uri>model://vendor1/materials/scripts</uri>
+              <uri>model://vendor1/materials/textures</uri>
+              <name>Vendor1/Diffuse</name>
             </script>
           </material>
         </visual>
@@ -1859,7 +1859,7 @@
         <child>plate</child>
         <pose>0 0 0.1 0 0 0</pose>
       </joint>
-      <pose frame=''>3.55 2.7 0.01 0.0 0.0 1.57</pose>
+      <pose frame=''>3.55 3.0 0.01 0.0 0.0 1.57</pose>
     </model>
 
     <gravity>0 0 -9.8</gravity>
