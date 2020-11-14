@@ -15,6 +15,7 @@ import scipy.interpolate
 import matplotlib.pyplot as plt
 from controllers import PoseController, TrajectoryTracker, HeadingController
 from enum import Enum
+from visualization_msgs.msg import Marker
 
 from dynamic_reconfigure.server import Server
 from asl_turtlebot.cfg import NavigatorConfig
@@ -48,9 +49,6 @@ class Navigator:
         self.theta_g = None
 
         self.th_init = 0.0
-
-        #dictionary to hold  locations of food items
-        self.food_locations = {}
 
         # map parameters
         self.map_width = 0
@@ -113,22 +111,6 @@ class Navigator:
         rospy.Subscriber('/map_metadata', MapMetaData, self.map_md_callback)
         rospy.Subscriber('/cmd_nav', Pose2D, self.cmd_nav_callback)
 
-        #Karen Added
-        rospy.Subscriber('/detector/donut', DetectedObject, self.object_callback)
-        print "finished init"
-
-    def object_callback(self, data):
-        #when an  object is detected, we compute the location of the object and store it as a dictionary
-        NAME  = data.name
-        dist  = data.distance
-        th_diff = 0.5*(data.thetaleft - data.thetaright)
-        th_center = data.thetaleft -  th_diff
-        food_loc_x  = self.x + dist*np.cos(th_center)
-        food_loc_y  = self.y + dist*np.sin(th_center)
-        LOCATIONS  =  (food_loc_x,food_loc_y)
-        #compute  location of food detected
-        self.food_locations[NAME] = LOCATIONS
-    
     def dyn_cfg_callback(self, config, level):
         rospy.loginfo("Reconfigure Request: k1:{k1}, k2:{k2}, k3:{k3}".format(**config))
         self.pose_controller.k1 = config["k1"]
