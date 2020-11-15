@@ -45,10 +45,7 @@ class GoalPoseCommander:
     def publish_goal_pose(self):
         """ sends the current desired pose to the navigator """
         if self.x_g is not None:
-<<<<<<< HEAD:scripts/goal_commander.py
             rospy.loginfo("loading goal from rviz "+ str(self.x_g) + ", "+str(self.y_g))
-=======
->>>>>>> cbed96532dbfb677b5f75b40e72ba7a4a39dd643:scripts/goal_commander.py
             pose_g_msg = Pose2D()
             pose_g_msg.x = self.x_g
             pose_g_msg.y = self.y_g
