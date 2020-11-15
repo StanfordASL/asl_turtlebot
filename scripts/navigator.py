@@ -37,6 +37,9 @@ class Navigator:
     def __init__(self):
         rospy.init_node('turtlebot_navigator', anonymous=True)
         self.mode = Mode.IDLE
+
+        self.delivery_req_list = []
+
         # current state
         self.x = 0.0
         self.y = 0.0
@@ -114,6 +117,10 @@ class Navigator:
         rospy.Subscriber('/map', OccupancyGrid, self.map_callback)
         rospy.Subscriber('/map_metadata', MapMetaData, self.map_md_callback)
         rospy.Subscriber('/cmd_nav', Pose2D, self.cmd_nav_callback)
+        rospy.Subscriber('/delivery_request',  String, self.delivery_callback)
+    
+    def delivery_callback(self, msg):
+        self.delivery_req_list.append(msg)
 
     def dyn_cfg_callback(self, config, level):
         rospy.loginfo("Reconfigure Request: k1:{k1}, k2:{k2}, k3:{k3}".format(**config))
