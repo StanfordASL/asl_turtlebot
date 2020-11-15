@@ -1,6 +1,9 @@
+<<<<<<< HEAD
 # Karen May Wang (kmwang14@stanford.edu)
 # AA274A
 # 10/29/2020
+=======
+>>>>>>> cbed96532dbfb677b5f75b40e72ba7a4a39dd643
 import numpy as np
 from numpy import linalg
 
@@ -45,7 +48,11 @@ class TrajectoryTracker:
         yd_d = np.interp(t,self.traj_times,self.traj[:,4])
         xdd_d = np.interp(t,self.traj_times,self.traj[:,5])
         ydd_d = np.interp(t,self.traj_times,self.traj[:,6])
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> cbed96532dbfb677b5f75b40e72ba7a4a39dd643
         return x_d, xd_d, xdd_d, y_d, yd_d, ydd_d
 
     def compute_control(self, x, y, th, t):
@@ -53,7 +60,11 @@ class TrajectoryTracker:
         Inputs:
             x,y,th: Current state
             t: Current time
+<<<<<<< HEAD
         Outputs:
+=======
+        Outputs: 
+>>>>>>> cbed96532dbfb677b5f75b40e72ba7a4a39dd643
             V, om: Control actions
         """
 
@@ -61,6 +72,7 @@ class TrajectoryTracker:
         x_d, xd_d, xdd_d, y_d, yd_d, ydd_d = self.get_desired_state(t)
 
         ########## Code starts here ##########
+<<<<<<< HEAD
         #reset to nominal velocity if velocity drops below the threshold
         if np.abs(self.V_prev) < V_PREV_THRES:
             NOMINAL_VELOCITY = np.sqrt(xd_d**2 + yd_d**2)
@@ -73,6 +85,51 @@ class TrajectoryTracker:
         a  = np.cos(th)*u1 + np.sin(th)*u2
         om = -(np.sin(th)/self.V_prev)*u1 + (np.cos(th)/self.V_prev)*u2
         V = self.V_prev + a*dt
+=======
+        #V = 0
+        #om = 0
+        
+        V_t = self.V_prev
+            
+        # get velocity components for feedback
+        
+        xdot = V_t * np.cos( th )
+        ydot = V_t * np.sin( th )
+        
+        # compute virtual controls
+        
+        #u = np.zeros( (2,1) )
+        
+        #u[0] = xdd_d + self.kpx * ( x_d - x ) + self.kdx * ( xd_d - xdot )
+        #u[1] = ydd_d + self.kpy * ( y_d - y ) + self.kdy * ( yd_d - ydot )
+        u0 = xdd_d + self.kpx * ( x_d - x ) + self.kdx * ( xd_d - xdot )
+        u1 = ydd_d + self.kpy * ( y_d - y ) + self.kdy * ( yd_d - ydot )
+        u = np.array( [ u0, u1 ] , dtype = float )
+
+        # check for zero velocity
+        
+        if np.abs(self.V_prev) < V_PREV_THRES:
+        #    V_t = np.sqrt( xd_d**2.0 + yd_d**2.0 ) * np.sign( self.V_prev )
+        #    V_t = V_PREV_THRES * np.sign( self.V_prev )
+            V_t = V_PREV_THRES
+           
+        # transform virtual controls to actual controls
+        
+        #print('u=',u)
+        #print('V_t=',V_t)
+
+        ct = np.cos( th )
+        st = np.sin( th )
+        invJ = np.array( [[ ct, st ], [ -st / V_t, ct / V_t ]] )
+        q = np.matmul( invJ, u )
+        Vdot = q[0]
+        om = q[1]
+        
+        # integrate acceleration control to get velocity control
+        
+        V = self.V_prev + dt * Vdot
+        
+>>>>>>> cbed96532dbfb677b5f75b40e72ba7a4a39dd643
         ########## Code ends here ##########
 
         # apply control limits

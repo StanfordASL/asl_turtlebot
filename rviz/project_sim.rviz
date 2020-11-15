@@ -183,7 +183,11 @@ Visualization Manager:
     - Alpha: 1
       Buffer Length: 1
       Class: rviz/Path
+<<<<<<< HEAD
       Color: 0; 0; 0
+=======
+      Color: 25; 255; 0
+>>>>>>> cbed96532dbfb677b5f75b40e72ba7a4a39dd643
       Enabled: true
       Head Diameter: 0.300000012
       Head Length: 0.200000003
@@ -228,9 +232,15 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
+<<<<<<< HEAD
       Max Intensity: 2.24572686e-35
       Min Color: 0; 0; 0
       Min Intensity: 0
+=======
+      Max Intensity: 4.74626507e-35
+      Min Color: 0; 0; 0
+      Min Intensity: -1.12923958e-11
+>>>>>>> cbed96532dbfb677b5f75b40e72ba7a4a39dd643
       Name: LaserScan
       Position Transformer: XYZ
       Queue Size: 10
@@ -248,6 +258,7 @@ Visualization Manager:
       Marker Topic: /marker_topic_0
       Name: Marker
       Namespaces:
+<<<<<<< HEAD
         {}
       Queue Size: 100
       Value: true
@@ -297,6 +308,11 @@ Visualization Manager:
       Topic: /planned_path
       Unreliable: false
       Value: true
+=======
+        "": true
+      Queue Size: 100
+      Value: true
+>>>>>>> cbed96532dbfb677b5f75b40e72ba7a4a39dd643
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
