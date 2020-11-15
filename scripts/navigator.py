@@ -37,7 +37,6 @@ class Navigator:
     def __init__(self):
         rospy.init_node('turtlebot_navigator', anonymous=True)
         self.mode = Mode.IDLE
-
         # current state
         self.x = 0.0
         self.y = 0.0
@@ -69,8 +68,8 @@ class Navigator:
         self.plan_start = [0.,0.]
         
         # Robot limits
-        self.v_max = 0.2    # maximum velocity
-        self.om_max = 0.4   # maximum angular velocity
+        self.v_max = 0.5    # maximum velocity (orig is 0.2)
+        self.om_max = 1.0   # maximum angular velocity (orig is 0.4)
 
         self.v_des = 0.12   # desired cruising velocity
         self.theta_start_thresh = 0.05   # threshold in theta to start moving forward when path-following
@@ -86,16 +85,21 @@ class Navigator:
         self.traj_dt = 0.1
 
         # trajectory tracking controller parameters
-        self.kpx = 0.5
-        self.kpy = 0.5
-        self.kdx = 1.5
-        self.kdy = 1.5
+        self.kpx = 0.5 #orig was 0.5
+        self.kpy = 0.5 #orig was 0.5
+        self.kdx = 1.5 #orig was 1.5
+        self.kdy = 1.5 #orig was 1.5
+
+        # pose controller parameters
+        self.k1 = 1.0
+        self.k2 = 1.0
+        self.k3 = 1.0
 
         # heading controller parameters
         self.kp_th = 2.
 
         self.traj_controller = TrajectoryTracker(self.kpx, self.kpy, self.kdx, self.kdy, self.v_max, self.om_max)
-        self.pose_controller = PoseController(0., 0., 0., self.v_max, self.om_max)
+        self.pose_controller = PoseController(self.k1, self.k2, self.k3, self.v_max, self.om_max)
         self.heading_controller = HeadingController(self.kp_th, self.om_max)
 
         self.nav_planned_path_pub = rospy.Publisher('/planned_path', Path, queue_size=10)
@@ -105,7 +109,7 @@ class Navigator:
 
         self.trans_listener = tf.TransformListener()
 
-        self.cfg_srv = Server(NavigatorConfig, self.dyn_cfg_callback)
+        #self.cfg_srv = Server(NavigatorConfig, self.dyn_cfg_callback)
 
         rospy.Subscriber('/map', OccupancyGrid, self.map_callback)
         rospy.Subscriber('/map_metadata', MapMetaData, self.map_md_callback)
@@ -173,7 +177,6 @@ class Navigator:
         returns whether the robot is close enough in position to the goal to
         start using the pose controller
         """
-        #print('near_goal state and goal: ', self.x, self.x_g, self.y, self.y_g )
         return linalg.norm(np.array([self.x-self.x_g, self.y-self.y_g])) < self.near_thresh
 
     def at_goal(self):
@@ -181,11 +184,6 @@ class Navigator:
         returns whether the robot has reached the goal position with enough
         accuracy to return to idle state
         """
-        #print('at_goal state and goal: ', self.x, self.x_g, self.y, self.y_g )
-	# *** Added G.S. 10/28/20***
-        if self.x_g is None :
-            return (True)
-        # **************************
         return (linalg.norm(np.array([self.x-self.x_g, self.y-self.y_g])) < self.near_thresh and abs(wrapToPi(self.theta - self.theta_g)) < self.at_thresh_theta)
 
     def aligned(self):
@@ -298,8 +296,7 @@ class Navigator:
         
 
         # Check whether path is too short
-        #if len(planned_path) < 2:   #********* changed KW 11-12-2020 *******
-        if len(planned_path) < 4:    #********* changed back GS 11-13-2020 ****
+        if len(planned_path) < 4:    
             rospy.loginfo("Path too short to track")
             self.switch_mode(Mode.PARK)
             return
