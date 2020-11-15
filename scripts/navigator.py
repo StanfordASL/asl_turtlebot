@@ -59,8 +59,8 @@ class Navigator:
         self.occupancy_updated = False
 
         # plan parameters
-        self.plan_resolution =  0.1
-        self.plan_horizon = 15
+        self.plan_resolution =  0.1/6
+        self.plan_horizon = 3.5
 
         # time when we started following the plan
         self.current_plan_start_time = rospy.get_rostime()
@@ -128,11 +128,10 @@ class Navigator:
         """
         if data.x != self.x_g or data.y != self.y_g or data.theta != self.theta_g:
 
-            print('cmd_nav_callback goal:', self.x_g)
-
             self.x_g = data.x
             self.y_g = data.y
             self.theta_g = data.theta
+            rospy.loginfo("cmd_nav_callback goal: " + str(self.x_g)) 
             self.replan()
 
     def map_md_callback(self, msg):
@@ -281,7 +280,8 @@ class Navigator:
         self.plan_start = x_init
         x_goal = self.snap_to_grid((self.x_g, self.y_g))
 
-	print('x_goal ',x_goal)
+        rospy.loginfo('In replan, x_init,y_init,th_init is:' + str(x_init))
+        rospy.loginfo('In replan, x_goal is:' + str(x_goal))
 
         problem = AStar(state_min,state_max,x_init,x_goal,self.occupancy,self.plan_resolution)
 

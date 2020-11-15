@@ -1,6 +1,3 @@
-# Karen May Wang (kmwang14@stanford.edu)
-# AA274A
-# 10/29/2020
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -63,7 +60,7 @@ class AStar(object):
         HINT: This should take one line.
         """
         ########## Code starts here ##########
-        return  np.sqrt( (x2[0]-x1[0])**2 + (x2[1]-x1[1])**2 )
+        return  np.sqrt( (x2[0]-x1[0])**2 + (x2[1]-x1[1])**2 )        
         ########## Code ends here ##########
 
     def snap_to_grid(self, x):
@@ -175,9 +172,15 @@ class AStar(object):
                 set membership efficiently using the syntax "if item in set".
         """
         ########## Code starts here ##########
+        # Check if goal is free
+
+	if not self.is_free( self.x_goal ) :
+	    print('WARNING: Goal pose is not reachable')
+	    return False
+
+	iters = 0
         while len(self.open_set) > 0:
-            #x_curr = self.find_best_est_cost_through()
-            x_curr = self.snap_to_grid(self.find_best_est_cost_through())
+            x_curr = self.find_best_est_cost_through()
             if x_curr == self.x_goal:
                 self.path = self.reconstruct_path()
                 return True
@@ -193,10 +196,14 @@ class AStar(object):
                 elif tentative_cost_to_arrive > self.cost_to_arrive[x_neigh]:
                     continue
 
-                self.came_from[x_neigh] = x_curr
+                self.came_from[x_neigh] = x_curr 
                 self.cost_to_arrive[x_neigh] = tentative_cost_to_arrive
                 self.est_cost_through[x_neigh] = tentative_cost_to_arrive + self.distance(x_neigh,self.x_goal)
-        return False
+	    iters += 1
+	    if iters > 2000 :
+		print('Error in A* - exceeded max iterations')
+		break
+        return False 
         ########## Code ends here ##########
 
 class DetOccupancyGrid2D(object):

@@ -1859,7 +1859,7 @@
         <child>plate</child>
         <pose>0 0 0.1 0 0 0</pose>
       </joint>
-      <pose frame=''>3.55 3.0 0.01 0.0 0.0 1.57</pose>
+      <pose frame=''>3.35 3.0 0.01 0.0 0.0 1.57</pose>
     </model>
 
     <gravity>0 0 -9.8</gravity>
