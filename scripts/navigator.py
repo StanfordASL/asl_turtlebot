@@ -3,7 +3,7 @@
 import rospy
 from nav_msgs.msg import OccupancyGrid, MapMetaData, Path
 from geometry_msgs.msg import Twist, Pose2D, PoseStamped
-from asl_turtlebot.msg import DetectedObject
+from asl_turtlebot.msg import DetectedObject, DetectedObjectList
 from std_msgs.msg import String
 import tf
 import numpy as np
@@ -43,11 +43,8 @@ class Navigator:
         self.ifdelivery  = False
         self.detected_objects_names = []
         self.detected_objects = []
-        self.marker0_loc = None
-        self.marker1_loc = None
-        self.marker2_loc = None
-        self.marker3_loc = None
-        self.marker4_loc = None
+        self.marker_dict = {}
+        self.objectname_markerLoc_dict = {}
 
         # current state
         self.x = 0.0
@@ -60,8 +57,9 @@ class Navigator:
         self.theta_g = None
 
         # initial state
-        self.x_init = 0
-        self.y_init = 0
+        self.x_init = rospy.get_param("~x_pos",3.15)
+        self.y_init = rospy.get_param("~y_pos",1.6)
+        self.z_init = rospy.get_param("~z_pos",0.0)
         self.th_init = 0.0
 
         # map parameters
@@ -100,10 +98,10 @@ class Navigator:
         self.traj_dt = 0.1
 
         # trajectory tracking controller parameters
-        self.kpx = 2.0 #orig was 0.5
-        self.kpy = 2.0 #orig was 0.5
-        self.kdx = 2.0 #orig was 1.5
-        self.kdy = 2.0 #orig was 1.5
+        self.kpx = 0.5 #orig was 0.5
+        self.kpy = 0.5 #orig was 0.5
+        self.kdx = 1.5 #orig was 1.5
+        self.kdy = 1.5 #orig was 1.5
 
         # pose controller parameters
         self.k1 = 1.0
@@ -131,38 +129,50 @@ class Navigator:
         rospy.Subscriber('/cmd_nav', Pose2D, self.cmd_nav_callback)
         rospy.Subscriber('/delivery_request',  String, self.delivery_callback)
         rospy.Subscriber('/detected_objects_list', DetectedObjectList, self.detected_obj_callback)
-        rospy.Subscriber('/marker_topic_0', Marker, self.marker0_callback)
-        rospy.Subscriber('/marker_topic_1', Marker, self.marker1_callback)
-        rospy.Subscriber('/marker_topic_2', Marker, self.marker2_callback)
-        rospy.Subscriber('/marker_topic_3', Marker, self.marker3_callback)
-        rospy.Subscriber('/marker_topic_4', Marker, self.marker4_callback)
+        rospy.Subscriber('/marker_topic_0', Marker, self.marker_callback)
+        rospy.Subscriber('/marker_topic_1', Marker, self.marker_callback)
+        rospy.Subscriber('/marker_topic_2', Marker, self.marker_callback)
+        rospy.Subscriber('/marker_topic_3', Marker, self.marker_callback)
+        rospy.Subscriber('/marker_topic_4', Marker, self.marker_callback)
 
-    def marker0_callback(self, msg):
-        self.marker0_loc = (msg.pose.position.x, msg.pose.position.y)
-    def marker1_callback(self, msg):
-        self.marker1_loc = (msg.pose.position.x, msg.pose.position.y)
-    def marker2_callback(self, msg):
-        self.marker2_loc = (msg.pose.position.x, msg.pose.position.y)
-    def marker3_callback(self, msg):
-        self.marker3_loc = (msg.pose.position.x, msg.pose.position.y)
-    def marker4_callback(self, msg):
-        self.marker4_loc = (msg.pose.position.x, msg.pose.position.y)
+    def marker_callback(self, msg):
+        self.marker_dict[msg.id] = (msg.pose.position.x, msg.pose.position.y) 
+
     def detected_obj_callback(self, msg):
         self.detected_objects_names = msg.objects
         self.detected_objects = msg.ob_msgs
 
     def delivery_callback(self, msg):
-        self.delivery_req_list.append(msg)
-        if msg in self.delivery_req_list:
-              self.ifdelivery = True
+        self.delivery_req_list.append(msg.data)
+        if msg.data in self.delivery_req_list:
+            self.ifdelivery = True
+            self.delivery_req_list = msg.data.split(',')
+            #find what index is associated with what object
+            #The markers are numbers as the robot sees it
+            #and the detected objects list is labeled as the  robot sees it
+            for i in range(self.detected_objects_names):
+                self.objectname_markerLoc_dict[self.detected_objects_names[i]] = self.marker_dict[i]
+            #we assume we have all the items in the list and the map is known
+            for i in range(self.delivery_req_list):
+                self.deliver(self.delivery_req_list[i])
+        elif msg.data in ['waypoint1']:
+            self.x_g = 3.38
+            self.y_g = 1.6 #3.05
+            self.theta_g = 0.0
+            self.replan() 
+        elif msg.data in ['home']:
+            self.x_g = self.x_init
+            self.y_g = self.y_init
+            self.theta_g  = 0.0
+            self.replan()
 
-        elif msg in ['waypoint1']:
-              self.x_g = 3.38
-              self.y_g = 3.05
-              self.theta_g = 0.0
-              self.replan() 
-        #elif msg in ['home']:
-        #    self.x_g 
+    def deliver(self, object_name):
+        #find what index is associated with what object
+        #The markers are numbers as the robot sees it
+        #and the detected objects list is labeled as the  robot sees it
+        self.x_g, self.y_g = self.objectname_markerLoc_dict[object_name]  
+        self.theta_g = 0.0
+        self.replan()
 
     def dyn_cfg_callback(self, config, level):
         rospy.loginfo("Reconfigure Request: k1:{k1}, k2:{k2}, k3:{k3}".format(**config))
@@ -429,9 +439,6 @@ class Navigator:
             elif self.mode == Mode.PARK:
                 if self.at_goal():
                     # forget about goal:
-
-                    print('Fahgetaboutit')
-
                     self.x_g = None
                     self.y_g = None
                     self.theta_g = None
