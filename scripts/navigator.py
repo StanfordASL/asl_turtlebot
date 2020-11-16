@@ -38,8 +38,16 @@ class Navigator:
         rospy.init_node('turtlebot_navigator', anonymous=True)
         self.mode = Mode.IDLE
 
+        #delivery lists
         self.delivery_req_list = []
         self.ifdelivery  = False
+        self.detected_objects_names = []
+        self.detected_objects = []
+        self.marker0_loc = None
+        self.marker1_loc = None
+        self.marker2_loc = None
+        self.marker3_loc = None
+        self.marker4_loc = None
 
         # current state
         self.x = 0.0
@@ -51,6 +59,9 @@ class Navigator:
         self.y_g = None
         self.theta_g = None
 
+        # initial state
+        self.x_init = 0
+        self.y_init = 0
         self.th_init = 0.0
 
         # map parameters
@@ -119,16 +130,39 @@ class Navigator:
         rospy.Subscriber('/map_metadata', MapMetaData, self.map_md_callback)
         rospy.Subscriber('/cmd_nav', Pose2D, self.cmd_nav_callback)
         rospy.Subscriber('/delivery_request',  String, self.delivery_callback)
-    
+        rospy.Subscriber('/detected_objects_list', DetectedObjectList, self.detected_obj_callback)
+        rospy.Subscriber('/marker_topic_0', Marker, self.marker0_callback)
+        rospy.Subscriber('/marker_topic_1', Marker, self.marker1_callback)
+        rospy.Subscriber('/marker_topic_2', Marker, self.marker2_callback)
+        rospy.Subscriber('/marker_topic_3', Marker, self.marker3_callback)
+        rospy.Subscriber('/marker_topic_4', Marker, self.marker4_callback)
+
+    def marker0_callback(self, msg):
+        self.marker0_loc = (msg.pose.position.x, msg.pose.position.y)
+    def marker1_callback(self, msg):
+        self.marker1_loc = (msg.pose.position.x, msg.pose.position.y)
+    def marker2_callback(self, msg):
+        self.marker2_loc = (msg.pose.position.x, msg.pose.position.y)
+    def marker3_callback(self, msg):
+        self.marker3_loc = (msg.pose.position.x, msg.pose.position.y)
+    def marker4_callback(self, msg):
+        self.marker4_loc = (msg.pose.position.x, msg.pose.position.y)
+    def detected_obj_callback(self, msg):
+        self.detected_objects_names = msg.objects
+        self.detected_objects = msg.ob_msgs
+
     def delivery_callback(self, msg):
         self.delivery_req_list.append(msg)
         if msg in self.delivery_req_list:
               self.ifdelivery = True
+
         elif msg in ['waypoint1']:
               self.x_g = 3.38
               self.y_g = 3.05
               self.theta_g = 0.0
               self.replan() 
+        #elif msg in ['home']:
+        #    self.x_g 
 
     def dyn_cfg_callback(self, config, level):
         rospy.loginfo("Reconfigure Request: k1:{k1}, k2:{k2}, k3:{k3}".format(**config))
