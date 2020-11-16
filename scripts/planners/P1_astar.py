@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from utils import plot_line_segments
 import pdb
+import rospy
 class AStar(object):
     """Represents a motion planning problem to be solved using A*"""
 
@@ -176,6 +177,7 @@ class AStar(object):
         """
         ########## Code starts here ##########
         while len(self.open_set) > 0:
+            #rospy.loginfo("in while loop of A*")
             #x_curr = self.find_best_est_cost_through()
             x_curr = self.snap_to_grid(self.find_best_est_cost_through())
             if x_curr == self.x_goal:

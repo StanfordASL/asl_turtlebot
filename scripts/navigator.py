@@ -81,8 +81,8 @@ class Navigator:
         self.plan_start = [0.,0.]
         
         # Robot limits
-        self.v_max = 0.5    # maximum velocity (orig is 0.2)
-        self.om_max = 1.0   # maximum angular velocity (orig is 0.4)
+        self.v_max = 0.14    # maximum velocity (orig is 0.2)
+        self.om_max = 0.3   # maximum angular velocity (orig is 0.4)
 
         self.v_des = 0.12   # desired cruising velocity
         self.theta_start_thresh = 0.05   # threshold in theta to start moving forward when path-following
@@ -104,9 +104,9 @@ class Navigator:
         self.kdy = 1.5 #orig was 1.5
 
         # pose controller parameters
-        self.k1 = 1.0
-        self.k2 = 1.0
-        self.k3 = 1.0
+        self.k1 = 0.5
+        self.k2 = 0.5
+        self.k3 = 0.5
 
         # heading controller parameters
         self.kp_th = 2.
@@ -144,22 +144,38 @@ class Navigator:
 
     def delivery_callback(self, msg):
         self.delivery_req_list.append(msg.data)
-        if msg.data in self.delivery_req_list:
+        if msg.data in self.detected_objects_names:
             self.ifdelivery = True
             self.delivery_req_list = msg.data.split(',')
             #find what index is associated with what object
             #The markers are numbers as the robot sees it
             #and the detected objects list is labeled as the  robot sees it
-            for i in range(self.detected_objects_names):
+            for i in range(len(self.detected_objects_names)):
                 self.objectname_markerLoc_dict[self.detected_objects_names[i]] = self.marker_dict[i]
             #we assume we have all the items in the list and the map is known
             for i in range(self.delivery_req_list):
                 self.deliver(self.delivery_req_list[i])
         elif msg.data in ['waypoint1']:
             self.x_g = 3.38
-            self.y_g = 1.6 #3.05
-            self.theta_g = 0.0
+            self.y_g = 2.36 
+            self.theta_g = np.pi/2.0
+            self.replan()
+        elif msg.data in ['waypoint2']: 
+            self.x_g = 3.0 #3.2 
+            self.y_g = 2.77 #2.82
+            self.theta_g = -np.pi
+            self.replan()
+        elif msg.data in ['waypoint3']:
+            self.x_g = 1.62
+            self.y_g = 2.73
+            self.theta_g = -np.pi
             self.replan() 
+        elif msg.data in ['waypoint4']:
+            self.x_g = 0.41
+            self.y_g = 2.52
+            self.theta_g = -1.81
+            self.replan() 
+ 
         elif msg.data in ['home']:
             self.x_g = self.x_init
             self.y_g = self.y_init
@@ -339,8 +355,8 @@ class Navigator:
         self.plan_start = x_init
         x_goal = self.snap_to_grid((self.x_g, self.y_g))
 
-        rospy.loginfo('In replan, x_init,y_init,th_init is:' + str(x_init))
-        rospy.loginfo('In replan, x_goal is:' + str(x_goal))
+        rospy.loginfo('In replan, x_init,y_init,th_init:' + str(x_init) + ', '+str(self.th_init))
+        rospy.loginfo('In replan, x_goal and th_g is:' + str(x_goal) + ', '+str(self.theta_g))
 
         problem = AStar(state_min,state_max,x_init,x_goal,self.occupancy,self.plan_resolution)
 
