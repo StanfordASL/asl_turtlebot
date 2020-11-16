@@ -43,6 +43,7 @@ class MarkerPublisher:
         rospy.Subscriber('/detector/orange', DetectedObject, self.object_callback)
         rospy.Subscriber('/detector/broccoli', DetectedObject, self.object_callback)
         rospy.Subscriber('/detector/cake', DetectedObject, self.object_callback)
+        rospy.Subscriber('/detector/hot_dog', DetectedObject, self.object_callback)
 
     def object_callback(self, data):
         #when an  object is detected, we compute the location of the object and  store it

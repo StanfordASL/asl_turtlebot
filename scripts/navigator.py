@@ -39,6 +39,7 @@ class Navigator:
         self.mode = Mode.IDLE
 
         self.delivery_req_list = []
+        self.ifdelivery  = False
 
         # current state
         self.x = 0.0
@@ -88,10 +89,10 @@ class Navigator:
         self.traj_dt = 0.1
 
         # trajectory tracking controller parameters
-        self.kpx = 0.5 #orig was 0.5
-        self.kpy = 0.5 #orig was 0.5
-        self.kdx = 1.5 #orig was 1.5
-        self.kdy = 1.5 #orig was 1.5
+        self.kpx = 2.0 #orig was 0.5
+        self.kpy = 2.0 #orig was 0.5
+        self.kdx = 2.0 #orig was 1.5
+        self.kdy = 2.0 #orig was 1.5
 
         # pose controller parameters
         self.k1 = 1.0
@@ -121,6 +122,13 @@ class Navigator:
     
     def delivery_callback(self, msg):
         self.delivery_req_list.append(msg)
+        if msg in self.delivery_req_list:
+              self.ifdelivery = True
+        elif msg in ['waypoint1']:
+              self.x_g = 3.38
+              self.y_g = 3.05
+              self.theta_g = 0.0
+              self.replan() 
 
     def dyn_cfg_callback(self, config, level):
         rospy.loginfo("Reconfigure Request: k1:{k1}, k2:{k2}, k3:{k3}".format(**config))
