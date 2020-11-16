@@ -82,14 +82,14 @@ class Navigator:
         
         # Robot limits
         self.v_max = 0.14    # maximum velocity (orig is 0.2)
-        self.om_max = 0.3   # maximum angular velocity (orig is 0.4)
+        self.om_max = 0.25   # maximum angular velocity (orig is 0.4)
 
         self.v_des = 0.12   # desired cruising velocity
         self.theta_start_thresh = 0.05   # threshold in theta to start moving forward when path-following
         self.start_pos_thresh = 0.2     # threshold to be far enough into the plan to recompute it
 
         # threshold at which navigator switches from trajectory to pose control
-        self.near_thresh = 0.2
+        self.near_thresh = 0.2 #orig was 0.2
         self.at_thresh = 0.02
         self.at_thresh_theta = 0.05
 
@@ -104,12 +104,12 @@ class Navigator:
         self.kdy = 1.5 #orig was 1.5
 
         # pose controller parameters
-        self.k1 = 0.5
-        self.k2 = 0.5
-        self.k3 = 0.5
+        self.k1 = 0.75
+        self.k2 = 0.75
+        self.k3 = 0.75
 
         # heading controller parameters
-        self.kp_th = 2.
+        self.kp_th = 1.75 #orig was 2.
 
         self.traj_controller = TrajectoryTracker(self.kpx, self.kpy, self.kdx, self.kdy, self.v_max, self.om_max)
         self.pose_controller = PoseController(self.k1, self.k2, self.k3, self.v_max, self.om_max)
@@ -166,14 +166,19 @@ class Navigator:
             self.theta_g = -np.pi
             self.replan()
         elif msg.data in ['waypoint3']:
-            self.x_g = 1.62
-            self.y_g = 2.73
-            self.theta_g = -np.pi
+            self.x_g = 1.68 #1.62
+            self.y_g = 2.76#2.73
+            self.theta_g = -np.pi #-np.pi
             self.replan() 
         elif msg.data in ['waypoint4']:
-            self.x_g = 0.41
-            self.y_g = 2.52
+            self.x_g = 0.9
+            self.y_g = 2.6
             self.theta_g = -1.81
+            self.replan()
+        elif msg.data in ['waypoint5']:
+            self.x_g = 0.25
+            self.y_g = 1.63
+            self.theta_g = 0.0
             self.replan() 
  
         elif msg.data in ['home']:
