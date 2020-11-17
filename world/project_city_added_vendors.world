@@ -1521,7 +1521,7 @@
         <child>plate</child>
         <pose>0 0 0.1 0 0 0</pose>
       </joint>
-      <pose frame=''>0.4 1.0 0.01 0.0 0.0 1.57</pose>
+      <pose frame=''>0.4 1.2 0.01 0.0 0.0 1.57</pose>
     </model>
 
     <model name='Vendor4'>
@@ -1690,7 +1690,7 @@
         <child>plate</child>
         <pose>0 0 0.1 0 0 0</pose>
       </joint>
-      <pose frame=''>1.5 1.5 0.01 0.0 0.0 3.14159</pose>
+      <pose frame=''>1.5 1.45 0.01 0.0 0.0 3.14159</pose>
     </model>
 
     <model name='Vendor5'>
@@ -1859,7 +1859,7 @@
         <child>plate</child>
         <pose>0 0 0.1 0 0 0</pose>
       </joint>
-      <pose frame=''>3.3 2.85 0.01 0.0 0.0 1.57</pose>
+      <pose frame=''>3.3 2.89 0.01 0.0 0.0 1.57</pose>
     </model>
 
     <gravity>0 0 -9.8</gravity>

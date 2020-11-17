@@ -92,7 +92,7 @@ class Navigator:
 
         # threshold at which navigator switches from trajectory to pose control
         self.near_thresh = 0.2 #orig was 0.2
-        self.at_thresh = 0.02
+        self.at_thresh = 0.1 #orig  was 0.02
         self.at_thresh_theta = 0.05
 
         # trajectory smoothing
@@ -106,12 +106,12 @@ class Navigator:
         self.kdy = 1.5 #orig was 1.5
 
         # pose controller parameters
-        self.k1 = 0.75
-        self.k2 = 0.75
-        self.k3 = 0.75
+        self.k1 = 0.7
+        self.k2 = 0.7
+        self.k3 = 0.7
 
         # heading controller parameters
-        self.kp_th = 1.75 #orig was 2.
+        self.kp_th = 2.0 #orig was 2.
 
         self.traj_controller = TrajectoryTracker(self.kpx, self.kpy, self.kdx, self.kdy, self.v_max, self.om_max)
         self.pose_controller = PoseController(self.k1, self.k2, self.k3, self.v_max, self.om_max)
@@ -184,7 +184,7 @@ class Navigator:
             self.replan()
         elif msg.data in ['waypoint6']:
             self.x_g = 1.078
-            self.y_g = 1.66
+            self.y_g = 1.63
             self.theta_g = 0.0
             self.replan()
         elif msg.data in ['waypoint7']:
@@ -202,9 +202,12 @@ class Navigator:
             self.y_g = 0.36
             self.theta_g = -np.pi
             self.replan()
+        elif msg.data in ['waypoint10']:
+            self.x_g = 1.07
+            self.y_g = 0.26
+            self.theta_g = -np.pi
+            self.replan()
 
-
- 
  
         elif msg.data in ['home']:
             self.x_g = self.x_init
