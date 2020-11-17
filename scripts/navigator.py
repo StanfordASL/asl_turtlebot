@@ -47,6 +47,11 @@ class Navigator:
         self.marker_dict = {}
         self.objectname_markerLoc_dict = {}
 
+        #stop sign params
+        self.stop_min_dist = 0.5
+        self.stop_time = 3.
+        self.crossing_time = 3.
+
         # current state
         self.x = 0.0
         self.y = 0.0
@@ -136,6 +141,7 @@ class Navigator:
         rospy.Subscriber('/marker_topic_2', Marker, self.marker_callback)
         rospy.Subscriber('/marker_topic_3', Marker, self.marker_callback)
         rospy.Subscriber('/marker_topic_4', Marker, self.marker_callback)
+        rospy.Subscriber('/detector/stop_sign', DetectedObject, self.stop_sign_detected_callback)
 
     def marker_callback(self, msg):
         self.marker_dict[msg.id] = (msg.pose.position.x, msg.pose.position.y) 
@@ -207,8 +213,6 @@ class Navigator:
             self.y_g = 0.26
             self.theta_g = -np.pi
             self.replan()
-
- 
         elif msg.data in ['home']:
             self.x_g = self.x_init
             self.y_g = self.y_init
@@ -292,6 +296,42 @@ class Navigator:
         cmd_vel.linear.x = 0.0
         cmd_vel.angular.z = 0.0
         self.nav_vel_pub.publish(cmd_vel)
+
+    def stop_sign_detected_callback(self, msg):
+        """ callback for when the detector has found a stop sign. Note that
+        a distance of 0 can mean that the lidar did not pickup the stop sign at all """
+
+        # distance of the stop sign
+        dist = msg.distance
+
+        # if close enough and in nav mode, stop
+        if dist > 0 and dist < self.stop_min_dist and self.mode == Mode.TRACK:
+            self.init_stop_sign()
+
+    def init_stop_sign(self):
+         """ initiates a stop sign maneuver """
+         self.stop_sign_start = rospy.get_rostime()
+         self.mode = Mode.STOP
+    def has_stopped(self):
+        """ checks if stop sign maneuver is over """
+        return self.mode == Mode.STOP and \
+               rospy.get_rostime() - self.stop_sign_start > rospy.Duration.from_sec(self.stop_time)
+    def stay_idle(self):
+        """ sends zero velocity to stay put """
+
+        vel_g_msg = Twist()
+        self.cmd_vel_publisher.publish(vel_g_msg)
+    def init_crossing(self):
+        """ initiates an intersection crossing maneuver """
+
+        self.cross_start = rospy.get_rostime()
+        self.mode = Mode.CROSS
+
+    def has_crossed(self):
+        """ checks if crossing maneuver is over """
+
+        return self.mode == Mode.CROSS and \
+               rospy.get_rostime() - self.cross_start > rospy.Duration.from_sec(self.crossing_time)
 
     def near_goal(self):
         """
@@ -486,6 +526,20 @@ class Navigator:
             # some transitions handled by callbacks
             if self.mode == Mode.IDLE:
                 pass
+            elif self.mode == Mode.STOP:
+                # At a stop sign
+                while True:
+                    self.stay_idle()
+                    if self.has_stopped():
+                        self.init_crossing()
+                        break
+            elif self.mode == Mode.CROSS:
+                # Crossing an intersection
+                while True:
+                    self.replan()
+                    if self.has_crossed():
+                        self.mode = Mode.TRACK
+                        break
             elif self.mode == Mode.ALIGN:
                 if self.aligned():
                     self.current_plan_start_time = rospy.get_rostime()
