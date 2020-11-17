@@ -7,6 +7,9 @@ import matplotlib.patches as patches
 from utils import plot_line_segments
 import pdb
 import rospy
+
+ITER_MAX = 10000
+
 class AStar(object):
     """Represents a motion planning problem to be solved using A*"""
 
@@ -176,9 +179,12 @@ class AStar(object):
                 set membership efficiently using the syntax "if item in set".
         """
         ########## Code starts here ##########
+        n = 0
         while len(self.open_set) > 0:
-            #rospy.loginfo("in while loop of A*")
-            #x_curr = self.find_best_est_cost_through()
+            #if taking too long in A*, return a failed solve
+            if n > ITER_MAX:
+                rospy.loginfo("while loop of A* taking too long. Exiting")
+                return False
             x_curr = self.snap_to_grid(self.find_best_est_cost_through())
             if x_curr == self.x_goal:
                 self.path = self.reconstruct_path()
@@ -198,6 +204,7 @@ class AStar(object):
                 self.came_from[x_neigh] = x_curr
                 self.cost_to_arrive[x_neigh] = tentative_cost_to_arrive
                 self.est_cost_through[x_neigh] = tentative_cost_to_arrive + self.distance(x_neigh,self.x_goal)
+            n+=1
         return False
         ########## Code ends here ##########
 

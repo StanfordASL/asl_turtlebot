@@ -8,6 +8,7 @@ from std_msgs.msg import String
 import tf
 import numpy as np
 from numpy import linalg
+from scipy import ndimage
 from utils import wrapToPi
 from planners import AStar, compute_smoothed_traj
 from grids import StochOccupancyGrid2D
@@ -70,6 +71,7 @@ class Navigator:
         self.map_probs = []
         self.occupancy = None
         self.occupancy_updated = False
+        self.map_threshold = 50 
 
         # plan parameters
         self.plan_resolution =  0.1/6
@@ -226,8 +228,22 @@ class Navigator:
     def map_callback(self,msg):
         """
         receives new map info and updates the map
+        msg.data is the map data, in row-major order, starting with (0,0).  Occupancy
+        probabilities are in the range [0,100].  Unknown is -1.
         """
-        self.map_probs = msg.data
+        #self.map_probs = msg.data
+        #we should get a int8 array, so we reshape into a 2D array
+        map_probs2D = np.array(msg.data).reshape((msg.info.height,msg.info.width))
+        #create a mask so that we don't touch -1 unknown values
+        mask = np.logical_not(A<0)
+        #threshold so that anything below this level is set to 0
+        map_probs2D_thresholded = (map_probs2D >= threshold) * 100
+        #dilate the map so that we don't crash into walls
+        map_probs2D_dilated = ndimage.binary_dilation(map_probs2D_thresholded).astype(np.int8) *100
+        #add back unknown values into the map
+        map_probs2D_dilated[mask] = -1
+        #reshape back into original format
+        self.map_probs = map_probs2D_dilated.reshape((msg.info.height*msg.info.width)))
         # if we've received the map metadata and have a way to update it:
         if self.map_width>0 and self.map_height>0 and len(self.map_probs)>0:
             self.occupancy = StochOccupancyGrid2D(self.map_resolution,
