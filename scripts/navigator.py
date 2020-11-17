@@ -75,7 +75,7 @@ class Navigator:
 
         # plan parameters
         self.plan_resolution =  0.1/6
-        self.plan_horizon = 3.5
+        self.plan_horizon = 4.0
 
         # time when we started following the plan
         self.current_plan_start_time = rospy.get_rostime()
@@ -83,8 +83,8 @@ class Navigator:
         self.plan_start = [0.,0.]
         
         # Robot limits
-        self.v_max = 0.14    # maximum velocity (orig is 0.2)
-        self.om_max = 0.25   # maximum angular velocity (orig is 0.4)
+        self.v_max = 0.2    # maximum velocity (orig is 0.2)
+        self.om_max = 0.3   # maximum angular velocity (orig is 0.4)
 
         self.v_des = 0.12   # desired cruising velocity
         self.theta_start_thresh = 0.05   # threshold in theta to start moving forward when path-following
@@ -163,25 +163,48 @@ class Navigator:
             self.theta_g = np.pi/2.0
             self.replan()
         elif msg.data in ['waypoint2']: 
-            self.x_g = 3.0 #3.2 
-            self.y_g = 2.77 #2.82
+            self.x_g = 3.06 #3.2 
+            self.y_g = 2.79 #2.82
             self.theta_g = -np.pi
             self.replan()
         elif msg.data in ['waypoint3']:
-            self.x_g = 1.68 #1.62
-            self.y_g = 2.76#2.73
+            self.x_g = 1.67 #1.62
+            self.y_g = 2.78#2.73
             self.theta_g = -np.pi #-np.pi
             self.replan() 
         elif msg.data in ['waypoint4']:
-            self.x_g = 0.9
-            self.y_g = 2.6
+            self.x_g = 0.684
+            self.y_g = 2.75
             self.theta_g = -1.81
             self.replan()
         elif msg.data in ['waypoint5']:
             self.x_g = 0.25
             self.y_g = 1.63
             self.theta_g = 0.0
-            self.replan() 
+            self.replan()
+        elif msg.data in ['waypoint6']:
+            self.x_g = 1.078
+            self.y_g = 1.66
+            self.theta_g = 0.0
+            self.replan()
+        elif msg.data in ['waypoint7']:
+            self.x_g = 2.01
+            self.y_g = 1.65
+            self.theta_g = 0.0
+            self.replan()
+        elif msg.data in ['waypoint8']:
+            self.x_g = 2.31
+            self.y_g = 1.33
+            self.theta_g = -np.pi/2
+            self.replan()
+        elif msg.data in ['waypoint9']:
+            self.x_g = 2.07
+            self.y_g = 0.36
+            self.theta_g = -np.pi
+            self.replan()
+
+
+ 
  
         elif msg.data in ['home']:
             self.x_g = self.x_init
@@ -235,15 +258,15 @@ class Navigator:
         #we should get a int8 array, so we reshape into a 2D array
         map_probs2D = np.array(msg.data).reshape((msg.info.height,msg.info.width))
         #create a mask so that we don't touch -1 unknown values
-        mask = np.logical_not(A<0)
+        mask = np.logical_not(map_probs2D<0)
         #threshold so that anything below this level is set to 0
-        map_probs2D_thresholded = (map_probs2D >= threshold) * 100
+        map_probs2D_thresholded = (map_probs2D >= self.map_threshold) * 100
         #dilate the map so that we don't crash into walls
-        map_probs2D_dilated = ndimage.binary_dilation(map_probs2D_thresholded).astype(np.int8) *100
+        map_probs2D_dilated = ndimage.binary_dilation(map_probs2D_thresholded,iterations=1).astype(np.int8) *100
         #add back unknown values into the map
         map_probs2D_dilated[mask] = -1
         #reshape back into original format
-        self.map_probs = map_probs2D_dilated.reshape((msg.info.height*msg.info.width)))
+        self.map_probs = map_probs2D_dilated.reshape((msg.info.height*msg.info.width))
         # if we've received the map metadata and have a way to update it:
         if self.map_width>0 and self.map_height>0 and len(self.map_probs)>0:
             self.occupancy = StochOccupancyGrid2D(self.map_resolution,
@@ -279,7 +302,7 @@ class Navigator:
         returns whether the robot has reached the goal position with enough
         accuracy to return to idle state
         """
-        return (linalg.norm(np.array([self.x-self.x_g, self.y-self.y_g])) < self.near_thresh and abs(wrapToPi(self.theta - self.theta_g)) < self.at_thresh_theta)
+        return (linalg.norm(np.array([self.x-self.x_g, self.y-self.y_g])) < self.at_thresh and abs(wrapToPi(self.theta - self.theta_g)) < self.at_thresh_theta)
 
     def aligned(self):
         """
