@@ -14,13 +14,13 @@ import math
 
 # path to the trained conv net
 PATH_TO_MODEL = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../tfmodels/ssd_mobilenet_v1_coco.pb')
-PATH_TO_LABELS = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../tfmodels/coco_labels.txt')
+PATH_TO_LABELS = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../tfmodels/coco_labels_project.txt')
 
 # set to True to use tensorflow and a conv net
 # False will use a very simple color thresholding to detect stop signs only
 USE_TF = True
 # minimum score for positive detection
-MIN_SCORE = .5
+MIN_SCORE = .3
 
 def load_object_labels(filename):
     """ loads the coco object readable name """
@@ -74,9 +74,8 @@ class Detector:
         self.object_labels = load_object_labels(PATH_TO_LABELS)
 
         self.tf_listener = TransformListener()
-        rospy.Subscriber('/raspicam_node/image_raw', Image, self.camera_callback, queue_size=1, buff_size=2**24)
-        rospy.Subscriber('/raspicam_node/image/compressed', CompressedImage, self.compressed_camera_callback, queue_size=1, buff_size=2**24)
-        rospy.Subscriber('/raspicam_node/camera_info', CameraInfo, self.camera_info_callback)
+        rospy.Subscriber('/camera/image_raw', Image, self.camera_callback, queue_size=1)
+        rospy.Subscriber('/camera/camera_info', CameraInfo, self.camera_info_callback)
         rospy.Subscriber('/scan', LaserScan, self.laser_callback)
 
     def run_detection(self, img):
@@ -143,17 +142,27 @@ class Detector:
 
     def project_pixel_to_ray(self,u,v):
         """ takes in a pixel coordinate (u,v) and returns a tuple (x,y,z)
-        that is a unit vector in the direction of the pixel, in the camera frame.
-        This function access self.fx, self.fy, self.cx and self.cy """
+        that is a unit vector in the direction of the pixel, in the camera frame """
 
-        x = (u - self.cx)/self.fx
-        y = (v - self.cy)/self.fy
-        norm = math.sqrt(x*x + y*y + 1)
-        x /= norm
-        y /= norm
-        z = 1.0 / norm
+        ########## Code starts here ##########
+        # See Lecture 9, 9.1.1
+        # Since it is in the camera frame (x, y, z) = (Xc, Yc, Zc)
+        # See equation 6, set Zc =  alpha
+        # TODO: Compute x, y, z.
+        #z = self.fx
+        #x = ((u - self.cx)/self.fx)*z
+        #y = ((v - self.cy)/self.fy)*z
+        x_unnormalized =  ((u - self.cx)/self.fx)
+        y_unnormalized =  ((v - self.cy)/self.fy)
+        z_unnormalized = 1.0
+        pixel_dir = np.array([x_unnormalized,y_unnormalized,z_unnormalized])
+        pixel_dir_norm = pixel_dir/np.linalg.norm(pixel_dir)
+        x = pixel_dir_norm[0]
+        y = pixel_dir_norm[1]
+        z = pixel_dir_norm[2]
+        ########## Code ends here ##########
 
-        return (x,y,z)
+        return x, y, z
 
     def estimate_distance(self, thetaleft, thetaright, ranges):
         """ estimates the distance of an object in between two angles
@@ -217,6 +226,8 @@ class Detector:
 
             # some objects were detected
             for (box,sc,cl) in zip(boxes, scores, classes):
+                if self.object_labels[cl] == 'none':
+                    continue
                 ymin = int(box[0]*img_h)
                 xmin = int(box[1]*img_w)
                 ymax = int(box[2]*img_h)
@@ -263,8 +274,8 @@ class Detector:
             self.detected_objects_pub.publish(detected_objects)
 
         # displays the camera image
-        #cv2.imshow("Camera", img_bgr8)
-        #cv2.waitKey(1)
+        cv2.imshow("Camera", img_bgr8)
+        cv2.waitKey(1)
 
     def camera_info_callback(self, msg):
         """ extracts relevant camera intrinsic parameters from the camera_info message.

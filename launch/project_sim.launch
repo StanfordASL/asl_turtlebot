@@ -73,7 +73,7 @@
   </node>
   
   <node pkg="asl_turtlebot" type="goal_commander.py" name="goal_commander" />
-  <node pkg="asl_turtlebot" type="detector.py" name="turtlebot_detector" />
+  <node pkg="asl_turtlebot" type="detector_mobilenet.py" name="turtlebot_detector" />
   <node pkg="asl_turtlebot" type="navigator.py" name="turtlebot_navigator" output="screen"/>
 
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find asl_turtlebot)/rviz/project_sim.rviz"/>
