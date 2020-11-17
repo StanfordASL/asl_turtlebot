@@ -40,13 +40,12 @@ class DetectorParams:
         # Path to the trained conv net
         #model_path = rospy.get_param("~model_path", "../tfmodels/stop_signs_gazebo.pb")
         model_path = rospy.get_param("~model_path", "../tfmodels/ssd_mobilenet_v1_coco.pb")
-        #model_path = rospy.get_param("~model_path", "../tfmodels/ssd_resnet_50_fpn_coco.pb")
-        label_path = rospy.get_param("~label_path", "../tfmodels/coco_labels.txt")
+        label_path = rospy.get_param("~label_path", "../tfmodels/coco_labels_project.txt")
         self.model_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), model_path)
         self.label_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), label_path)
 
         # Minimum score for positive detection
-        self.min_score = rospy.get_param("~min_score", 0.5)
+        self.min_score = rospy.get_param("~min_score", 0.25)
 
         if verbose:
             print("DetectorParams:")
@@ -218,9 +217,13 @@ class Detector:
         # runs object detection in the image
         (boxes, scores, classes, num) = self.run_detection(img)
 
+
+
         if num > 0:
             # some objects were detected
             for (box,sc,cl) in zip(boxes, scores, classes):
+                if self.object_labels[cl] == 'none':
+                    continue
                 ymin = int(box[0]*img_h)
                 xmin = int(box[1]*img_w)
                 ymax = int(box[2]*img_h)
