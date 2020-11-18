@@ -1,19 +1,12 @@
-# Karen May Wang (kmwang14@stanford.edu)
-# AA274A
-# 10/29/2020
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from utils import plot_line_segments
-import pdb
-import rospy
-
-ITER_MAX = 10000
 
 class AStar(object):
     """Represents a motion planning problem to be solved using A*"""
 
-    def __init__(self, statespace_lo, statespace_hi, x_init, x_goal, occupancy, resolution=1.0):
+    def __init__(self, statespace_lo, statespace_hi, x_init, x_goal, occupancy, resolution=1):
         self.statespace_lo = statespace_lo         # state space lower bound (e.g., (-5, -5))
         self.statespace_hi = statespace_hi         # state space upper bound (e.g., (5, 5))
         self.occupancy = occupancy                 # occupancy grid
@@ -44,15 +37,25 @@ class AStar(object):
             Boolean True/False
         """
         ########## Code starts here ##########
-        if x[0] < self.statespace_lo[0] or x[0] > self.statespace_hi[0]:
+
+        xmin = self.statespace_lo[ 0 ]
+        ymin = self.statespace_lo[ 1 ]
+        xmax = self.statespace_hi[ 0 ]
+        ymax = self.statespace_hi[ 1 ]
+
+
+        # call collision check fcn check boundary violations
+
+        if not ( self.occupancy.is_free( x ) ) :
             return False
-        elif x[1] < self.statespace_lo[1] or x[1] > self.statespace_hi[1]:
+        elif ( x[ 0 ] > xmax or x[ 0 ] < xmin ) :
+            return False 
+        elif ( x[ 1 ] > ymax or x[ 1 ] < ymin ) :
             return False
-        elif self.occupancy.is_free(x) == False:
-            return False
-        else:
+        else :
             return True
 
+           
         ########## Code ends here ##########
 
     def distance(self, x1, x2):
@@ -67,7 +70,10 @@ class AStar(object):
         HINT: This should take one line.
         """
         ########## Code starts here ##########
-        return  np.sqrt( (x2[0]-x1[0])**2 + (x2[1]-x1[1])**2 )
+
+        dist = np.sqrt( ( x1[1] - x2[1] )**2.0 + ( x1[0] - x2[0] )**2.0 )
+        return dist
+         
         ########## Code ends here ##########
 
     def snap_to_grid(self, x):
@@ -100,22 +106,57 @@ class AStar(object):
         """
         neighbors = []
         ########## Code starts here ##########
+        
+        
+        for i1 in range(8) :
+            if i1 == 0 :
+                # above left
+                delx = -self.resolution
+                dely = self.resolution
+            elif i1 == 1 :
+                # above 
+                delx = 0.0
+                dely = self.resolution
+            elif i1 == 2 :
+                # above right
+                delx = self.resolution
+                dely = self.resolution
+            elif i1 == 3 :
+                # left 
+                delx = -self.resolution
+                dely = 0.0
+            elif i1 == 4 :
+                # right 
+                delx = self.resolution
+                dely = 0.0
+            elif i1 == 5 :
+                # below left 
+                delx = -self.resolution
+                dely = -self.resolution
+            elif i1 == 6 :
+                # below 
+                delx = 0.0
+                dely = -self.resolution
+            else :
+                # below right
+                delx = self.resolution
+                dely = -self.resolution
 
-        #cross shape
-        left_x = self.snap_to_grid((x[0]-self.resolution,x[1]))
-        right_x = self.snap_to_grid((x[0]+self.resolution,x[1]))
-        down_x = self.snap_to_grid((x[0],x[1]-self.resolution))
-        up_x = self.snap_to_grid((x[0],x[1]+self.resolution))
-        #diagonals
-        up_left_x = self.snap_to_grid((x[0]-self.resolution,x[1]+self.resolution))
-        up_right_x = self.snap_to_grid((x[0]+self.resolution,x[1]+self.resolution))
-        bot_left_x = self.snap_to_grid((x[0]-self.resolution,x[1]-self.resolution))
-        bot_right_x = self.snap_to_grid((x[0]+self.resolution,x[1]-self.resolution))
+            xn = ( x[0] + delx, x[1] + dely )
+            
+            #print(i1,xn)
 
-        possible_moves = [left_x,right_x,down_x,up_x,up_left_x,up_right_x,bot_left_x,bot_right_x]
-        for x in possible_moves:
-            if self.is_free(x) == True:
-                neighbors.append(x)
+            xnsnap = self.snap_to_grid( xn )
+
+            # check if new cell is feasible and if so add to list
+
+            if self.is_free( xnsnap ) :
+                neighbors.append( xnsnap )
+
+         # end for iter in range
+
+        
+        
         ########## Code ends here ##########
         return neighbors
 
@@ -179,33 +220,131 @@ class AStar(object):
                 set membership efficiently using the syntax "if item in set".
         """
         ########## Code starts here ##########
-        n = 0
-        while len(self.open_set) > 0:
-            #if taking too long in A*, return a failed solve
-            if n > ITER_MAX:
-                rospy.loginfo("while loop of A* taking too long. Exiting")
-                return False
-            x_curr = self.snap_to_grid(self.find_best_est_cost_through())
-            if x_curr == self.x_goal:
-                self.path = self.reconstruct_path()
-                return True
-            self.open_set.remove(x_curr)
-            self.closed_set.add(x_curr)
-            neighbors = self.get_neighbors(x_curr)
-            for x_neigh in neighbors:
-                if x_neigh in self.closed_set:
-                    continue
-                tentative_cost_to_arrive = self.cost_to_arrive[x_curr] + self.distance(x_curr,x_neigh)
-                if x_neigh not in self.open_set:
-                    self.open_set.add(x_neigh)
-                elif tentative_cost_to_arrive > self.cost_to_arrive[x_neigh]:
-                    continue
 
-                self.came_from[x_neigh] = x_curr
-                self.cost_to_arrive[x_neigh] = tentative_cost_to_arrive
-                self.est_cost_through[x_neigh] = tentative_cost_to_arrive + self.distance(x_neigh,self.x_goal)
-            n+=1
+        
+        
+        #print(' xmin ymin xmax ymax ',self.statespace_lo, self.statespace_hi )
+        
+        
+        # initialize cost to arrive and cost through
+
+        #for iterx in range( self.statespace_lo[0], self.statespace_hi[0] + 1 ) :
+        #    for itery in range( self.statespace_lo[1], self.statespace_hi[1] + 1 ) :
+        iterx = self.statespace_lo[0]
+
+        while iterx <= self.statespace_hi[0] + 0.1 * self.resolution  :
+
+            itery = self.statespace_lo[1]
+
+            while itery <= self.statespace_hi[1] + 0.1 * self.resolution  :
+
+                xi = self.snap_to_grid( ( iterx, itery ) )
+                
+                #print('xi = ', xi )
+                
+                self.cost_to_arrive[ xi ] = 1.0E+29
+                self.est_cost_through[ xi ] = 1.0e+29
+            	itery += self.resolution
+
+            # end for itery
+
+            iterx += self.resolution
+
+        # end for iterx
+        
+        #open_set.add( x_init )
+
+        # reset cost to arrive and cost through for x_init
+
+        self.cost_to_arrive[ self.x_init ] = 0
+        self.est_cost_through[ self.x_init ] = self.distance( self.x_init, self.x_goal )
+
+        while ( len( self.open_set ) > 0 ) :
+
+            # get the member of open_set with the lowest cost and assign to x_cur
+
+            x_cur = self.snap_to_grid( self.find_best_est_cost_through() )
+
+            #print('x_cur = ',x_cur)
+
+            # check if x_cur is the goal
+
+            if x_cur == self.x_goal :
+
+                # construct path and return
+                self.path = self.reconstruct_path()
+
+                return True
+
+            # remove x_cur from open set
+
+            self.open_set.remove( x_cur )
+
+            # add x_cur to closed set
+
+            self.closed_set.add( x_cur )
+
+            # get neighbors of x_cur
+
+            neighbors = self.get_neighbors( x_cur )
+            
+            for x_nbr in neighbors :
+
+                if x_nbr in self.closed_set : 
+
+                    #break
+                    ii = 0
+
+                else :
+
+                    temp_cost_to_arrive = self.cost_to_arrive[ x_cur ] + self.distance( x_cur, x_nbr )
+
+#                    if x_nbr not in self.open_set :
+
+#                        self.open_set.add( x_nbr )
+
+#                    else :
+
+                    # get cost to arrive
+                    #print('x_nbr',x_nbr)
+
+
+                    cost_to_arrive_x_nbr = self.cost_to_arrive[ x_nbr ]
+
+                    if temp_cost_to_arrive <= cost_to_arrive_x_nbr :
+
+                        # store the previous vertex for x_nbr
+
+                        self.came_from[ x_nbr ] = x_cur
+
+                        # store the cost to arrive
+
+                        self.cost_to_arrive[ x_nbr ] = temp_cost_to_arrive
+
+                        # store the estimated cost through
+
+                        self.est_cost_through[ x_nbr ] = self.cost_to_arrive[ x_nbr ] + self.distance( x_nbr, self.x_goal )
+
+                        if x_nbr not in self.open_set :
+
+                            self.open_set.add( x_nbr )
+
+
+                        # end if temp_cost_to_arrive...
+
+                    # end if x_nbr not in O
+
+                # end if x_nbr in C
+
+            # end if x_nbr in neighbors
+
+        # end while len( open_set ) > 0
+
         return False
+
+        
+        
+        
         ########## Code ends here ##########
 
 class DetOccupancyGrid2D(object):
