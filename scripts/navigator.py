@@ -79,7 +79,7 @@ class Navigator:
         self.map_threshold = 50 
 
         # plan parameters
-        self.plan_resolution =  0.1/6
+        self.plan_resolution =  0.1/2.0
         self.plan_horizon = 4.0
 
         # time when we started following the plan
@@ -126,11 +126,12 @@ class Navigator:
         self.nav_smoothed_path_pub = rospy.Publisher('/cmd_smoothed_path', Path, queue_size=10)
         self.nav_smoothed_path_rej_pub = rospy.Publisher('/cmd_smoothed_path_rejected', Path, queue_size=10)
         self.nav_vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
+        self.inflated_occupancy_grid = rospy.Publisher('/inflated_occupancy_grid', OccupancyGrid, queue_size=10)
 
         self.trans_listener = tf.TransformListener()
 
         #self.cfg_srv = Server(NavigatorConfig, self.dyn_cfg_callback)
-
+        
         rospy.Subscriber('/map', OccupancyGrid, self.map_callback)
         rospy.Subscriber('/map_metadata', MapMetaData, self.map_md_callback)
         rospy.Subscriber('/cmd_nav', Pose2D, self.cmd_nav_callback)
@@ -141,7 +142,7 @@ class Navigator:
         rospy.Subscriber('/marker_topic_2', Marker, self.marker_callback)
         rospy.Subscriber('/marker_topic_3', Marker, self.marker_callback)
         rospy.Subscriber('/marker_topic_4', Marker, self.marker_callback)
-        rospy.Subscriber('/detector/stop_sign', DetectedObject, self.stop_sign_detected_callback)
+        #rospy.Subscriber('/detector/stop_sign', DetectedObject, self.stop_sign_detected_callback)
 
     def marker_callback(self, msg):
         self.marker_dict[msg.id] = (msg.pose.position.x, msg.pose.position.y) 
@@ -261,7 +262,7 @@ class Navigator:
         msg.data is the map data, in row-major order, starting with (0,0).  Occupancy
         probabilities are in the range [0,100].  Unknown is -1.
         """
-        #self.map_probs = msg.data
+        self.map_probs = msg.data
         #we should get a int8 array, so we reshape into a 2D array
         map_probs2D = np.array(msg.data).reshape((msg.info.height,msg.info.width))
         #create a mask so that we don't touch -1 unknown values
@@ -273,7 +274,14 @@ class Navigator:
         #add back unknown values into the map
         map_probs2D_dilated[mask] = -1
         #reshape back into original format
-        self.map_probs = map_probs2D_dilated.reshape((msg.info.height*msg.info.width))
+        inflated_OG = map_probs2D_dilated.reshape((msg.info.height*msg.info.width))
+
+        #publish the inflated occupancy grid (for debugging)
+        inflated_OG_msg = OccupancyGrid()
+        inflated_OG_msg.info = msg.info
+        inflated_OG_msg.data = inflated_OG
+        self.inflated_occupancy_grid.publish(inflated_OG_msg)
+
         # if we've received the map metadata and have a way to update it:
         if self.map_width>0 and self.map_height>0 and len(self.map_probs)>0:
             self.occupancy = StochOccupancyGrid2D(self.map_resolution,
@@ -282,7 +290,7 @@ class Navigator:
                                                   self.map_origin[0],
                                                   self.map_origin[1],
                                                   8,
-                                                  self.map_probs)
+                                                  inflated_OG)
             if self.x_g is not None:
                 # if we have a goal to plan to, replan
                 rospy.loginfo("replanning because of new map")
@@ -436,8 +444,11 @@ class Navigator:
             return
 
         # Attempt to plan a path
-        state_min = self.snap_to_grid((-self.plan_horizon, -self.plan_horizon))
+        #state_min = self.snap_to_grid((-self.plan_horizon, -self.plan_horizon))
+        #state_max = self.snap_to_grid((self.plan_horizon, self.plan_horizon))
+        state_min = self.snap_to_grid((0.0, 0.0))
         state_max = self.snap_to_grid((self.plan_horizon, self.plan_horizon))
+
         x_init = self.snap_to_grid((self.x, self.y))
         self.plan_start = x_init
         x_goal = self.snap_to_grid((self.x_g, self.y_g))
@@ -562,6 +573,7 @@ class Navigator:
                     self.switch_mode(Mode.IDLE)
 
             self.publish_control()
+
             rate.sleep()
 
 if __name__ == '__main__':    
