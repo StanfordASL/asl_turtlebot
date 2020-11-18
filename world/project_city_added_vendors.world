@@ -1352,7 +1352,7 @@
         <child>plate</child>
         <pose>0 0 0.1 0 0 0</pose>
       </joint>
-      <pose frame=''>1.15 2.87  0.01 0.0 0.0 3.14159</pose>
+      <pose frame=''>1.6 2.9  0.01 0.0 0.0 3.1415</pose>
     </model>
 
     <model name='Vendor3'>

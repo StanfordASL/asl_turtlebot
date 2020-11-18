@@ -180,8 +180,8 @@ class Navigator:
             self.theta_g = -np.pi
             self.replan()
         elif msg.data in ['waypoint3']:
-            self.x_g = 1.63 #1.62
-            self.y_g = 2.75#2.73
+            self.x_g = 1.63 
+            self.y_g = 2.73
             self.theta_g = -np.pi #-np.pi
             self.replan() 
         elif msg.data in ['waypoint4']:
@@ -435,19 +435,22 @@ class Navigator:
         #front of robot
         dist = 3*self.plan_resolution
         x_front = (self.x+dist*np.cos(self.theta), self.y+dist*np.sin(self.theta))
+        x_back  = (self.x-dist*np.cos(self.theta), self.y-dist*np.sin(self.theta))
         if self.occupancy.is_free(x_front):
             rospy.loginfo("Navigator: Keep moving forwards")
-            V  = 0.1
+            V  = 0.06
+            om = 0.0
+        elif self.occupancy.is_free(x_back):
+            rospy.loginfo("Navigator: Keep moving backwards")
+            V  = -0.06
             om = 0.0
         else:
-            rospy.loginfo("Navigator: Keep moving backwards")
-            V  = -0.1
-            om = 0.0
+            return -1
         cmd_vel = Twist()
         cmd_vel.linear.x = V
         cmd_vel.angular.z = om
         self.nav_vel_pub.publish(cmd_vel) 
-      
+        return 1 
 
     def replan(self):
         """
@@ -485,10 +488,13 @@ class Navigator:
         success =  problem.solve()
         if not success:
             rospy.loginfo("Planning failed")
-            time0 = rospy.get_time()
-            time  = rospy.get_time()
-            while time-time0  <  self.move_time: 
-                self.keep_moving()
+            #time0 = rospy.get_rostime()
+            #time  = rospy.get_rostime()
+            #while time-time0  <  rospy.Duration.from_sec(self.move_time):
+            #    time = rospy.get_rostime() 
+            #    flag = self.keep_moving()
+            #    if flag == -1:
+            #         break
             return
         rospy.loginfo("Planning Succeeded")
 
