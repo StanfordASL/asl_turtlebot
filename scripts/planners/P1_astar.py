@@ -8,7 +8,7 @@ from utils import plot_line_segments
 import pdb
 import rospy
 
-ITER_MAX = 10000
+ITER_MAX = 5000
 
 class AStar(object):
     """Represents a motion planning problem to be solved using A*"""
