@@ -243,7 +243,7 @@ Visualization Manager:
       Marker Topic: /marker_topic_0
       Name: Marker
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Alpha: 1
@@ -297,7 +297,7 @@ Visualization Manager:
       Marker Topic: /marker_topic_1
       Name: Marker
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -305,7 +305,7 @@ Visualization Manager:
       Marker Topic: /marker_topic_2
       Name: Marker
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -323,6 +323,16 @@ Visualization Manager:
       Namespaces:
         {}
       Queue Size: 100
+      Value: true
+    - Alpha: 0.699999988
+      Class: rviz/Map
+      Color Scheme: costmap
+      Draw Behind: true
+      Enabled: true
+      Name: Map
+      Topic: /inflated_occupancy_grid
+      Unreliable: false
+      Use Timestamp: false
       Value: true
   Enabled: true
   Global Options:
@@ -349,7 +359,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 9.69711113
+      Distance: 10.3701725
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
@@ -364,10 +374,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.505398571
+      Pitch: 0.814796448
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.0754034221
+      Yaw: 0.0154037466
     Saved: ~
 Window Geometry:
   Displays:
@@ -385,5 +395,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1200
-  X: 33
-  Y: 86
+  X: 31
+  Y: 50

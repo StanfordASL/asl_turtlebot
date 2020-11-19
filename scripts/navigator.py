@@ -29,6 +29,8 @@ class Mode(Enum):
     ALIGN = 1
     TRACK = 2
     PARK = 3
+    STOP = 4
+    CROSS = 5
 
 class Navigator:
     """
@@ -51,6 +53,9 @@ class Navigator:
         self.stop_min_dist = 0.5
         self.stop_time = 3.
         self.crossing_time = 3.
+
+        #force move params
+        self.move_time = 3.
 
         # current state
         self.x = 0.0
@@ -79,7 +84,7 @@ class Navigator:
         self.map_threshold = 50 
 
         # plan parameters
-        self.plan_resolution =  0.1/6
+        self.plan_resolution =  0.04
         self.plan_horizon = 4.0
 
         # time when we started following the plan
@@ -88,8 +93,8 @@ class Navigator:
         self.plan_start = [0.,0.]
         
         # Robot limits
-        self.v_max = 0.2    # maximum velocity (orig is 0.2)
-        self.om_max = 0.3   # maximum angular velocity (orig is 0.4)
+        self.v_max = 0.21    # maximum velocity (orig is 0.2)
+        self.om_max = 0.35   # maximum angular velocity (orig is 0.4)
 
         self.v_des = 0.12   # desired cruising velocity
         self.theta_start_thresh = 0.05   # threshold in theta to start moving forward when path-following
@@ -126,11 +131,12 @@ class Navigator:
         self.nav_smoothed_path_pub = rospy.Publisher('/cmd_smoothed_path', Path, queue_size=10)
         self.nav_smoothed_path_rej_pub = rospy.Publisher('/cmd_smoothed_path_rejected', Path, queue_size=10)
         self.nav_vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
+        self.inflated_occupancy_grid = rospy.Publisher('/inflated_occupancy_grid', OccupancyGrid, queue_size=10)
 
         self.trans_listener = tf.TransformListener()
 
         #self.cfg_srv = Server(NavigatorConfig, self.dyn_cfg_callback)
-
+        
         rospy.Subscriber('/map', OccupancyGrid, self.map_callback)
         rospy.Subscriber('/map_metadata', MapMetaData, self.map_md_callback)
         rospy.Subscriber('/cmd_nav', Pose2D, self.cmd_nav_callback)
@@ -141,7 +147,7 @@ class Navigator:
         rospy.Subscriber('/marker_topic_2', Marker, self.marker_callback)
         rospy.Subscriber('/marker_topic_3', Marker, self.marker_callback)
         rospy.Subscriber('/marker_topic_4', Marker, self.marker_callback)
-        rospy.Subscriber('/detector/stop_sign', DetectedObject, self.stop_sign_detected_callback)
+        #rospy.Subscriber('/detector/stop_sign', DetectedObject, self.stop_sign_detected_callback)
 
     def marker_callback(self, msg):
         self.marker_dict[msg.id] = (msg.pose.position.x, msg.pose.position.y) 
@@ -164,18 +170,18 @@ class Navigator:
             for i in range(self.delivery_req_list):
                 self.deliver(self.delivery_req_list[i])
         elif msg.data in ['waypoint1']:
-            self.x_g = 3.38
-            self.y_g = 2.36 
+            self.x_g = 3.42
+            self.y_g = 2.38 
             self.theta_g = np.pi/2.0
             self.replan()
         elif msg.data in ['waypoint2']: 
             self.x_g = 3.06 #3.2 
-            self.y_g = 2.79 #2.82
+            self.y_g = 2.82
             self.theta_g = -np.pi
             self.replan()
         elif msg.data in ['waypoint3']:
-            self.x_g = 1.67 #1.62
-            self.y_g = 2.78#2.73
+            self.x_g = 1.63 
+            self.y_g = 2.73
             self.theta_g = -np.pi #-np.pi
             self.replan() 
         elif msg.data in ['waypoint4']:
@@ -189,7 +195,7 @@ class Navigator:
             self.theta_g = 0.0
             self.replan()
         elif msg.data in ['waypoint6']:
-            self.x_g = 1.078
+            self.x_g = 1.0
             self.y_g = 1.63
             self.theta_g = 0.0
             self.replan()
@@ -209,8 +215,8 @@ class Navigator:
             self.theta_g = -np.pi
             self.replan()
         elif msg.data in ['waypoint10']:
-            self.x_g = 1.07
-            self.y_g = 0.26
+            self.x_g = 1.21
+            self.y_g = 0.2
             self.theta_g = -np.pi
             self.replan()
         elif msg.data in ['home']:
@@ -261,11 +267,11 @@ class Navigator:
         msg.data is the map data, in row-major order, starting with (0,0).  Occupancy
         probabilities are in the range [0,100].  Unknown is -1.
         """
-        #self.map_probs = msg.data
+        self.map_probs = msg.data
         #we should get a int8 array, so we reshape into a 2D array
         map_probs2D = np.array(msg.data).reshape((msg.info.height,msg.info.width))
         #create a mask so that we don't touch -1 unknown values
-        mask = np.logical_not(map_probs2D<0)
+        mask = map_probs2D<0
         #threshold so that anything below this level is set to 0
         map_probs2D_thresholded = (map_probs2D >= self.map_threshold) * 100
         #dilate the map so that we don't crash into walls
@@ -273,7 +279,14 @@ class Navigator:
         #add back unknown values into the map
         map_probs2D_dilated[mask] = -1
         #reshape back into original format
-        self.map_probs = map_probs2D_dilated.reshape((msg.info.height*msg.info.width))
+        inflated_OG = map_probs2D_dilated.reshape((msg.info.height*msg.info.width))
+
+        #publish the inflated occupancy grid (for debugging)
+        inflated_OG_msg = OccupancyGrid()
+        inflated_OG_msg.info = msg.info
+        inflated_OG_msg.data = inflated_OG
+        self.inflated_occupancy_grid.publish(inflated_OG_msg)
+
         # if we've received the map metadata and have a way to update it:
         if self.map_width>0 and self.map_height>0 and len(self.map_probs)>0:
             self.occupancy = StochOccupancyGrid2D(self.map_resolution,
@@ -282,7 +295,7 @@ class Navigator:
                                                   self.map_origin[0],
                                                   self.map_origin[1],
                                                   8,
-                                                  self.map_probs)
+                                                  inflated_OG)
             if self.x_g is not None:
                 # if we have a goal to plan to, replan
                 rospy.loginfo("replanning because of new map")
@@ -418,6 +431,27 @@ class Navigator:
         t = (rospy.get_rostime()-self.current_plan_start_time).to_sec()
         return max(0.0, t)  # clip negative time to 0
 
+    def keep_moving(self):
+        #front of robot
+        dist = 3*self.plan_resolution
+        x_front = (self.x+dist*np.cos(self.theta), self.y+dist*np.sin(self.theta))
+        x_back  = (self.x-dist*np.cos(self.theta), self.y-dist*np.sin(self.theta))
+        if self.occupancy.is_free(x_front):
+            rospy.loginfo("Navigator: Keep moving forwards")
+            V  = 0.06
+            om = 0.0
+        elif self.occupancy.is_free(x_back):
+            rospy.loginfo("Navigator: Keep moving backwards")
+            V  = -0.06
+            om = 0.0
+        else:
+            return -1
+        cmd_vel = Twist()
+        cmd_vel.linear.x = V
+        cmd_vel.angular.z = om
+        self.nav_vel_pub.publish(cmd_vel) 
+        return 1 
+
     def replan(self):
         """
         loads goal into pose controller
@@ -436,8 +470,11 @@ class Navigator:
             return
 
         # Attempt to plan a path
-        state_min = self.snap_to_grid((-self.plan_horizon, -self.plan_horizon))
-        state_max = self.snap_to_grid((self.plan_horizon, self.plan_horizon))
+        #state_min = self.snap_to_grid((-self.plan_horizon, -self.plan_horizon))
+        #state_max = self.snap_to_grid((self.plan_horizon, self.plan_horizon))
+        state_min = self.snap_to_grid((-0.05,-0.05))
+        state_max = self.snap_to_grid((self.plan_horizon,self.plan_horizon))
+
         x_init = self.snap_to_grid((self.x, self.y))
         self.plan_start = x_init
         x_goal = self.snap_to_grid((self.x_g, self.y_g))
@@ -451,6 +488,13 @@ class Navigator:
         success =  problem.solve()
         if not success:
             rospy.loginfo("Planning failed")
+            #time0 = rospy.get_rostime()
+            #time  = rospy.get_rostime()
+            #while time-time0  <  rospy.Duration.from_sec(self.move_time):
+            #    time = rospy.get_rostime() 
+            #    flag = self.keep_moving()
+            #    if flag == -1:
+            #         break
             return
         rospy.loginfo("Planning Succeeded")
 
@@ -536,7 +580,7 @@ class Navigator:
             elif self.mode == Mode.CROSS:
                 # Crossing an intersection
                 while True:
-                    self.replan()
+                    self.keep_moving()
                     if self.has_crossed():
                         self.mode = Mode.TRACK
                         break
@@ -562,6 +606,7 @@ class Navigator:
                     self.switch_mode(Mode.IDLE)
 
             self.publish_control()
+
             rate.sleep()
 
 if __name__ == '__main__':    

@@ -10,7 +10,7 @@ from utils import wrapToPi
 #This  node  publishes  marker info to rviz and  a  DetectedObjectList (list of strings of  objects and list of Detected Objects)
 
 #threshold at which we store the detected object
-CONFIDENCE = 0.85
+CONFIDENCE = 0.8
 
 class MarkerPublisher:
     def __init__(self):

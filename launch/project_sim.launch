@@ -47,7 +47,7 @@
     <param name="linearUpdate" value="0.2"/>
     <param name="angularUpdate" value="0.2"/>
     <param name="temporalUpdate" value="0.5"/>
-    <param name="delta" value="0.05"/>
+    <param name="delta" value="0.04"/>
     <param name="lskip" value="0"/>
     <param name="particles" value="120"/>
     <param name="sigma" value="0.05"/>
