@@ -8,7 +8,7 @@ TURTLEBOT_NAME="" # TODO insert your value in quotes
 if [ -z "$TURTLEBOT_NAME" ]; then
   echo "######################## Error! ########################"
   echo ""
-  echo "Edit this file (~/catkin_ws/src/asl_turtlebot/scripts/rostb3.sh)" \
+  echo "Edit this file (~/catkin_ws/src/asl_turtlebot/rostb3.sh)" \
     "to populate the TURTLEBOT_NAME variable"
   echo ""
   echo "######################## Error! ########################"
