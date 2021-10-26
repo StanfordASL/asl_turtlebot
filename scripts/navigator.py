@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import rospy
 from nav_msgs.msg import OccupancyGrid, MapMetaData, Path
@@ -107,7 +107,7 @@ class Navigator:
         rospy.Subscriber('/map_metadata', MapMetaData, self.map_md_callback)
         rospy.Subscriber('/cmd_nav', Pose2D, self.cmd_nav_callback)
 
-        print "finished init"
+        print("finished init")
         
     def dyn_cfg_callback(self, config, level):
         rospy.loginfo("Reconfigure Request: k1:{k1}, k2:{k2}, k3:{k3}".format(**config))
@@ -340,7 +340,7 @@ class Navigator:
                 self.current_plan = []
                 rospy.loginfo("Navigator: waiting for state info")
                 self.switch_mode(Mode.IDLE)
-                print e
+                print(e)
                 pass
 
             # STATE MACHINE LOGIC
