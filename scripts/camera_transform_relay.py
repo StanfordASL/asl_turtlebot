@@ -7,13 +7,13 @@ from sensor_msgs.msg import CompressedImage, CameraInfo
 class ImageTransformer:
     def __init__(self):
         rospy.init_node('tb3_image_transformer',anonymous=True)
+        self.image_repub = rospy.Publisher('/camera_relay/image/compressed', CompressedImage, queue_size=1)
+        self.camera_info_repub = rospy.Publisher('/camera_relay/camera_info', CameraInfo, queue_size=1)
         rospy.Subscriber('/raspicam_node/image/compressed',
                             CompressedImage,
                             self.transform_image_and_repub,
                             queue_size=1,buff_size = 2**24)
         rospy.Subscriber('/raspicam_node/camera_info', CameraInfo, self.camera_info_callback, queue_size=1, buff_size=2**24)
-        self.image_repub = rospy.Publisher('/camera_relay/image/compressed', CompressedImage, queue_size=1)
-        self.camera_info_repub = rospy.Publisher('/camera_relay/camera_info', CameraInfo, queue_size=1)
 
     def transform_image_and_repub(self, msg):
         img = cv2.imdecode(np.fromstring(msg.data, np.uint8), cv2.IMREAD_COLOR)
