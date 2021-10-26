@@ -1,16 +1,12 @@
 <launch>
     <include file="$(find turtlebot3_bringup)/launch/turtlebot3_core.launch" />
     <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch" />
-    <arg name="redis" default="aa274-ginger.local"/>
 
     <machine name="pi" address="$(env PI_HOSTNAME)" env-loader="~/catkin_ws/devel/env_pi.sh" user="aa274" password="aa274" />
 
     <node pkg="topic_tools" type="throttle" name="velodyne_throttler" args="messages /velodyne_points 3" />
 
-    <node machine="pi" type="gripper_subscriber.py" pkg ="asl_turtlebot" name="gripper_subscriber" />
-
     <node machine="pi" type="raspicam_node" pkg="raspicam_node" name="raspicam_node" output="screen">
-
         <param name="camera_info_url" value="package://raspicam_node/camera_info/camerav2_410x308.yaml"/>
         <param name="width" value="410"/>
         <param name="height" value="308"/>
@@ -23,10 +19,6 @@
     </node>
 
     <node pkg="asl_turtlebot" type="camera_transform_relay.py" name="camera_relay"/>
-
-    <node pkg="asl_turtlebot" type="redis_relay.py" name="redis_relay" args="$(arg redis)" />
-
-    <node pkg="asl_turtlebot" type="gripper_relay.py" name="gripper_relay"/>
 
     <node pkg="gmapping" type="slam_gmapping" name="turtlebot3_slam_gmapping" output="screen">
         <param name="base_frame" value="base_footprint"/>
@@ -72,9 +64,3 @@
 
     <node pkg="tf" type="static_transform_publisher" name="velodyne_broadcaster" args="0.0175 0 0.215 0 0 0 1 base_footprint velodyne 100" />
 </launch>
-
-
-
-<!-- change camera parameters -->
-<!-- rosrun dynamic_reconfigure dynparam get raspicam_node -->
-<!-- rosrun dynamic_reconfigure dynparam set raspicam_node shutterSpeed 40000 -->
