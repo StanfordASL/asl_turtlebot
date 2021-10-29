@@ -232,7 +232,7 @@ class Detector:
                 # estimate the corresponding distance using the lidar
                 dist = self.estimate_distance(thetaleft,thetaright,img_laser_ranges)
 
-                if not self.object_publishers.has_key(cl):
+                if cl not in self.object_publishers:
                     self.object_publishers[cl] = rospy.Publisher('/detector/'+self.object_labels[cl],
                         DetectedObject, queue_size=10)
 
