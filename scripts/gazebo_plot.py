@@ -14,8 +14,8 @@ class GazeboPlot:
     def __init__(self):
         self.lock = Lock()
 
-    	self.x = []
-    	self.y = []
+        self.x = []
+        self.y = []
         self.t = np.linspace(-1,0,BUF_SIZE)
         self.v = [0] * BUF_SIZE
         self.count = 0
