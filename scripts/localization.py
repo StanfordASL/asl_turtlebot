@@ -15,8 +15,8 @@ from HW4.maze_sim_parameters import LineExtractionParams, NoiseParams, MapParams
 class LocalizationParams:
 
     def __init__(self, verbose=False):
-        self.mc = rospy.get_param("~mc", False)
-        self.num_particles = rospy.get_param("~num_particles", 100)
+        self.mc = rospy.get_param("/rosparam/mc", False)
+        self.num_particles = rospy.get_param("/rosparam/num_particles", 100)
         if verbose:
             print(self)
 
