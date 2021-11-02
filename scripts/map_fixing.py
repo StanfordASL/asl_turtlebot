@@ -98,7 +98,7 @@ class EKF_SLAM_Visualizer:
 
         self.ground_truth_map_pub = rospy.Publisher("ground_truth_map", Marker, queue_size=10)
         self.ground_truth_map_marker = Marker()
-        self.ground_truth_map_marker.header.frame_id = "/world"
+        self.ground_truth_map_marker.header.frame_id = "world"
         self.ground_truth_map_marker.header.stamp = rospy.Time.now()
         self.ground_truth_map_marker.ns = "ground_truth"
         self.ground_truth_map_marker.type = 5    # line list
@@ -167,7 +167,7 @@ class EKF_SLAM_Visualizer:
                 continue
 
             self.EKF_map_marker.points = []
-            for j in range((self.EKF.x.size - 3)/2):
+            for j in range(int((self.EKF.x.size - 3)/2)):
                 p1, p2 = line_endpoints_from_alpha_and_r(self.EKF.x[3+2*j], self.EKF.x[3+2*j+1])
                 self.EKF_map_marker.points.extend([Point(p1[0], p1[1], 0), Point(p2[0], p2[1], 0)])
             self.ground_truth_map_pub.publish(self.ground_truth_map_marker)
