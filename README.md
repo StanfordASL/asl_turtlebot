@@ -67,7 +67,7 @@ for detected objects.
 `scripts/grids.py`: Used for motion planning. Performs collision checking on
 occupancy grids. grids.py functions/classes are used by scripts/navigator.py.
 
-`&#\xE2\x9D\x8C scripts/keyboard_teleop.py`: Alternative teleoperation to
+`&#274C; scripts/keyboard_teleop.py`: Alternative teleoperation to
 standard turtlebot3_teleop.launch.
 
 `scripts/navigator.py`: Node that manages point to point robot navigation, uses
