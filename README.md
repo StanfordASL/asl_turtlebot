@@ -67,26 +67,13 @@ for detected objects.
 `scripts/grids.py`: Used for motion planning. Performs collision checking on
 occupancy grids. grids.py functions/classes are used by scripts/navigator.py.
 
-```diff
--scripts/keyboard_teleop.py
-```: Alternative teleoperation to standard
-turtlebot3_teleop.launch.
+`&#\xE2\x9D\x8C scripts/keyboard_teleop.py`: Alternative teleoperation to
+standard turtlebot3_teleop.launch.
 
 `scripts/navigator.py`: Node that manages point to point robot navigation, uses
 your A\* implementation (HW2) in an MPC framework along with cubic spline
 interpolation and the differential flatness controller (from HW1), switching to
 the pose controller from HW1 when close to the goal.
-
-`scripts/puddle_viz.py`: Subscribes to the filtered velodyne points produced by
-velodyne_filter.launch (/velodyne_puddle_filter). Identifies approximate
-location of a highly reflective region on the ground (i.e. puddles) and places a
-marker and tf frame over it. **DISCLAIMER:**  This is very rough starter code
-meant to serve as an example for point cloud processing. This code is not robust
-and is not integrated with any of the existing stack. For example, this node
-cannot deal with multiple puddles simultaneously and estimates location naively.
-This is by no means the only or expected approach to identifying puddles and
-your group is expected to entirely repurpose or rewrite this code to suit your
-team's objectives.
 
 `scripts/utils.py`: Utility functions. Currently contains a wrapToPi function,
 but feel free to add to this.
