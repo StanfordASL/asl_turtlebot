@@ -1,18 +1,34 @@
 #!/usr/bin/env python3
+
+import sys, os
+
 import rospy
 from gazebo_msgs.msg import ModelStates
-from sensor_msgs.msg import LaserScan
-from geometry_msgs.msg import Twist, TransformStamped, Point
-from visualization_msgs.msg import Marker
+from sensor_msgs.msg import LaserScan, PointCloud, ChannelFloat32
+from geometry_msgs.msg import Twist, TransformStamped, Point32
 import numpy as np
-import scipy.linalg
 import tf
 import tf2_ros
-from copy import deepcopy
 from collections import deque
-from HW4.ekf import EkfSlam
+
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+
+from HW4.ekf import EkfLocalization
 from HW4.ExtractLines import ExtractLines
-from HW4.maze_sim_parameters import LineExtractionParams, NoiseParams, ARENA, ArenaParams
+from HW4.maze_sim_parameters import LineExtractionParams, NoiseParams, MapParams
+
+class LocalizationParams:
+
+    def __init__(self, verbose=False):
+        self.mc = rospy.get_param("/rosparam/mc", False)
+        self.num_particles = rospy.get_param("/rosparam/num_particles", 100)
+        if verbose:
+            print(self)
+
+    def __repr__(self):
+        return ("LocalizationParams:\n"
+                "    mc = {}\n"
+                "    num_particles = {}").format(self.mc, self.num_particles)
 
 def get_yaw_from_quaternion(quat):
     return tf.transformations.euler_from_quaternion([quat.x,
@@ -34,14 +50,11 @@ def create_transform_msg(translation, rotation, child_frame, base_frame, time=No
     t.transform.rotation.w = rotation[3]
     return t
 
-def line_endpoints_from_alpha_and_r(alpha, r, d = 100.0):
-    return ((r*np.cos(alpha) - d*np.sin(alpha), r*np.sin(alpha) + d*np.cos(alpha)),
-            (r*np.cos(alpha) + d*np.sin(alpha), r*np.sin(alpha) - d*np.cos(alpha)))
-
-class EKF_SLAM_Visualizer:
+class LocalizationVisualizer:
 
     def __init__(self):
-        rospy.init_node('turtlebot_mapping')
+        rospy.init_node('turtlebot_localization')
+        self.params = LocalizationParams(verbose=True)
         
         ## Use simulation time (i.e. get time from rostopic /clock)
         rospy.set_param('use_sim_time', 'true')
@@ -80,15 +93,6 @@ class EKF_SLAM_Visualizer:
         self.controls = deque()
         self.scans = deque()
 
-
-        N_map_lines = ArenaParams.shape[1]
-        self.x0_map = ArenaParams.T.flatten()
-        self.x0_map[4:] = self.x0_map[4:] + np.vstack((NoiseParams["std_alpha"]*np.random.randn(N_map_lines-2),    # first two lines fixed
-                                                       NoiseParams["std_r"]*np.random.randn(N_map_lines-2))).T.flatten()
-        self.P0_map = np.diag(np.concatenate((np.zeros(4),
-                              np.array([[NoiseParams["std_alpha"]**2 for i in range(N_map_lines-2)],
-                                        [NoiseParams["std_r"]**2 for i in range(N_map_lines-2)]]).T.flatten())))
-
         ## Set up publishers and subscribers
         self.tfBroadcaster = tf2_ros.TransformBroadcaster()
         rospy.Subscriber('/scan', LaserScan, self.scan_callback)
@@ -96,32 +100,8 @@ class EKF_SLAM_Visualizer:
         rospy.Subscriber('/gazebo/model_states', ModelStates, self.state_callback)
         self.ground_truth_ct = 0
 
-        self.ground_truth_map_pub = rospy.Publisher("ground_truth_map", Marker, queue_size=10)
-        self.ground_truth_map_marker = Marker()
-        self.ground_truth_map_marker.header.frame_id = "world"
-        self.ground_truth_map_marker.header.stamp = rospy.Time.now()
-        self.ground_truth_map_marker.ns = "ground_truth"
-        self.ground_truth_map_marker.type = 5    # line list
-        self.ground_truth_map_marker.pose.orientation.w = 1.0
-        self.ground_truth_map_marker.scale.x = .025
-        self.ground_truth_map_marker.scale.y = .025
-        self.ground_truth_map_marker.scale.z = .025
-        self.ground_truth_map_marker.color.r = 0.0
-        self.ground_truth_map_marker.color.g = 1.0
-        self.ground_truth_map_marker.color.b = 0.0
-        self.ground_truth_map_marker.color.a = 1.0
-        self.ground_truth_map_marker.lifetime = rospy.Duration(1000)
-        self.ground_truth_map_marker.points = sum([[Point(p1[0], p1[1], 0),
-                                                    Point(p2[0], p2[1], 0)] for p1, p2 in ARENA], [])
-
-        self.EKF_map_pub = rospy.Publisher("EKF_map", Marker, queue_size=10)
-        self.EKF_map_marker = deepcopy(self.ground_truth_map_marker)
-        self.EKF_map_marker.color.r = 1.0
-        self.EKF_map_marker.color.g = 0.0
-        self.EKF_map_marker.color.b = 0.0
-        self.EKF_map_marker.color.a = 1.0
-
-
+        if self.params.mc:
+            self.particles_pub = rospy.Publisher('particle_filter', PointCloud, queue_size=10)
 
     def scan_callback(self, msg):
         if self.EKF:
@@ -131,7 +111,7 @@ class EKF_SLAM_Visualizer:
 
     def control_callback(self, msg):
         if self.EKF:
-            self.controls.append((rospy.Time.now(), np.array([msg.linear.x, msg.angular.z]) + .1*np.random.randn(2)))
+            self.controls.append((rospy.Time.now(), np.array([msg.linear.x, msg.angular.z])))
 
     def state_callback(self, msg):
         self.ground_truth_ct = self.ground_truth_ct + 1
@@ -148,30 +128,39 @@ class EKF_SLAM_Visualizer:
     def run(self):
         rate = rospy.Rate(100)
 
+        particles = PointCloud()
+        particles.header.stamp = self.EKF_time
+        particles.header.frame_id = "world"
+        particles.points = [Point32(0., 0., 0.) for _ in range(self.params.num_particles)]
+        particle_intensities = ChannelFloat32()
+        particle_intensities.name = "intensity"
+        particle_intensities.values = [0. for _ in range(self.params.num_particles)]
+        particles.channels.append(particle_intensities)
+
         while not self.latest_pose:
             rate.sleep()
 
-        x0_pose = np.array([self.latest_pose.position.x,
-                            self.latest_pose.position.y,
-                            get_yaw_from_quaternion(self.latest_pose.orientation)])
-        P0_pose = NoiseParams["Sigma0"]
+        x0 = np.array([self.latest_pose.position.x,
+                       self.latest_pose.position.y,
+                       get_yaw_from_quaternion(self.latest_pose.orientation)])
         self.EKF_time = self.latest_pose_time
-        self.EKF = EkfSlam(np.concatenate((x0_pose, self.x0_map)), scipy.linalg.block_diag(P0_pose, self.P0_map),
-                           NoiseParams["R"], self.base_to_camera, 2*NoiseParams["g"])
-        self.OLC = EkfSlam(np.concatenate((x0_pose, self.x0_map)), scipy.linalg.block_diag(P0_pose, self.P0_map),
-                           NoiseParams["R"], self.base_to_camera, 2*NoiseParams["g"])
+        if self.params.mc:
+            x0s = np.tile(np.expand_dims(x0, 0), (self.params.num_particles, 1))
+            from HW4.particle_filter import MonteCarloLocalization
+            self.EKF = MonteCarloLocalization(x0s, 10. * NoiseParams["R"],
+                                              MapParams, self.base_to_camera, NoiseParams["g"])
+            self.OLC = EkfLocalization(x0, NoiseParams["Sigma0"], NoiseParams["R"],
+                                       MapParams, self.base_to_camera, NoiseParams["g"])
+        else:
+            self.EKF = EkfLocalization(x0, NoiseParams["Sigma0"], NoiseParams["R"],
+                                       MapParams, self.base_to_camera, NoiseParams["g"])
+            self.OLC = EkfLocalization(x0, NoiseParams["Sigma0"], NoiseParams["R"],
+                                       MapParams, self.base_to_camera, NoiseParams["g"])
 
         while True:
             if not self.scans:
                 rate.sleep()
                 continue
-
-            self.EKF_map_marker.points = []
-            for j in range(int((self.EKF.x.size - 3)/2)):
-                p1, p2 = line_endpoints_from_alpha_and_r(self.EKF.x[3+2*j], self.EKF.x[3+2*j+1])
-                self.EKF_map_marker.points.extend([Point(p1[0], p1[1], 0), Point(p2[0], p2[1], 0)])
-            self.ground_truth_map_pub.publish(self.ground_truth_map_marker)
-            self.EKF_map_pub.publish(self.EKF_map_marker)
 
             while self.controls and self.controls[0][0] <= self.scans[0][0]:
                 next_timestep, next_control = self.controls.popleft()
@@ -182,17 +171,28 @@ class EKF_SLAM_Visualizer:
                 self.OLC.transition_update(self.current_control,
                                            next_timestep.to_time() - self.EKF_time.to_time())
                 self.EKF_time, self.current_control = next_timestep, next_control
+                label = "EKF" if not self.params.mc else "MCL"
                 self.tfBroadcaster.sendTransform(create_transform_msg(
                     (self.EKF.x[0], self.EKF.x[1], 0),
                     tf.transformations.quaternion_from_euler(0, 0, self.EKF.x[2]),
-                    "EKF", "world", self.EKF_time)
+                    label, "world", self.EKF_time)
                 )
                 self.tfBroadcaster.sendTransform(create_transform_msg(
                     (self.OLC.x[0], self.OLC.x[1], 0),
                     tf.transformations.quaternion_from_euler(0, 0, self.OLC.x[2]),
                     "open_loop", "world", self.EKF_time)
                 )
-            
+
+                if self.params.mc:
+                    particles.header.stamp = self.EKF_time
+                    for m in range(self.params.num_particles):
+                        x = self.EKF.xs[m]
+                        w = self.EKF.ws[m]
+                        particles.points[m].x = x[0]
+                        particles.points[m].y = x[1]
+                        particles.channels[0].values[m] = w
+                    self.particles_pub.publish(particles)
+
             scan_time, theta, rho = self.scans.popleft()
             if scan_time < self.EKF_time:
                 continue
@@ -207,9 +207,20 @@ class EKF_SLAM_Visualizer:
                                                 NoiseParams["var_rho"])
             Z = np.vstack((alpha, r))
             self.EKF.measurement_update(Z, C_AR)
+
+            if self.params.mc:
+                particles.header.stamp = self.EKF_time
+                for m in range(self.params.num_particles):
+                    x = self.EKF.xs[m]
+                    w = self.EKF.ws[m]
+                    particles.points[m].x = x[0]
+                    particles.points[m].y = x[1]
+                    particles.channels[0].values[m] = w
+                self.particles_pub.publish(particles)
+
             while len(self.scans) > 1:    # keep only the last element in the queue, if we're falling behind
                 self.scans.popleft()
 
 if __name__ == '__main__':
-    vis = EKF_SLAM_Visualizer()
+    vis = LocalizationVisualizer()
     vis.run()

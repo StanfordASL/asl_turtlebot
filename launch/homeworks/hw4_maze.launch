@@ -3,7 +3,7 @@
   <arg name="x_pos" default="1.0"/>
   <arg name="y_pos" default="-0.5"/>
   <arg name="z_pos" default="-1.5"/>
-  <arg name="gui" default="false"/>
+  <arg name="gui" default="true"/>
 
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="use_sim_time" value="true"/>
@@ -21,5 +21,6 @@
     <param name="publish_frequency" type="double" value="30.0" />
   </node>
 
+  <node pkg="asl_turtlebot" type="localization.py" name="localization" output="screen" />
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find asl_turtlebot)/rviz/localization.rviz"/>
 </launch>

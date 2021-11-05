@@ -1,2 +1,5 @@
 .DS_Store
 *.pyc
+
+scripts/controllers/*
+scripts/HW*/*

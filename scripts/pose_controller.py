@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys, os
 
 import rospy
 from gazebo_msgs.msg import ModelStates
@@ -7,6 +8,7 @@ from std_msgs.msg import Float32MultiArray, String
 import tf
 import numpy as np
 
+sys.path.append(os.path.join(os.path.dirname(__file__), "utils"))
 from HW1.P2_pose_stabilization import PoseController
 
 class PoseControllerParams:

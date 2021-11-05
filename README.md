@@ -24,9 +24,13 @@ transforms). This should run onboard the jetson.
 
 `launch/turtlebot3_maze.launch`:
 
-`launch/turtlebot3_nav_sim.launch`:
+&#128994; `launch/turtlebot3_nav_sim.launch`:
+
+&#128994; `launch/turtlebot3_nav.launch`:
 
 `launch/turtlebot3_signs_sim.launch`:
+
+`launch/turtlebot3_signs.launch`:
 
 `launch/turtlebot3_sim.launch`:
 
@@ -36,7 +40,8 @@ transforms). This should run onboard the jetson.
 model of the final project environment, as well as the core SLAM and detector
 nodes. You'll need to run your navigator and other project nodes separately.
 
-&#128994; `launch/section4_demo.launch`:
+&#128994; `launch/section4_demo.launch`: used for section 4, testing pose
+navigation, virtual
 
 `launch/turtlebot3_arena.launch`:
 
@@ -44,9 +49,6 @@ nodes. You'll need to run your navigator and other project nodes separately.
 
 `launch/turtlebot3_gmapping.launch`:
 
-`launch/turtlebot3_nav.launch`:
-
-`launch/turtlebot3_signs.launch`:
 
 **Scripts/Nodes:**
 
@@ -89,35 +91,49 @@ this to send orders for the project.
 `scripts/navigator.py`
 `scripts/planners`
 `scripts/__pycache__`
-`scripts/localization.py`
+
 `scripts/map_fixing.py`
 `scripts/map_registration.py`
+
 `scripts/pose_controller_nav.py`
 `scripts/pose_controller.py`
-`scripts/puddle_viz.py`
+
 `scripts/redis_relay.py`
+
 `scripts/request_publisher.py`
+
 `scripts/supervisor_nav.py`
 `scripts/supervisor.py`
+
 `scripts/visual_servo.py`
+
 `scripts/camera_relay.py`
 `scripts/camera_transform_relay.py`
+
 `scripts/controller.py`
 `scripts/controllers`
+
 `scripts/detector_mobilenet.py`
 `scripts/detector.py`
 `scripts/detector_viz.py`
+
 `scripts/gazebo_plot.py`
 `scripts/goal_commander.py`
-`scripts/gripper_publisher.py`
-`scripts/gripper_relay.py`
-`scripts/gripper_sim_controller.py`
-`scripts/gripper_subscriber.py`
-`scripts/utils.py`
-`scripts/grids.py`
-`scripts/__init__.py`
+
+`scripts/gripper/gripper_publisher.py`
+`scripts/gripper/gripper_relay.py`
+`scripts/gripper/gripper_sim_controller.py`
+`scripts/gripper/gripper_subscriber.py`
+
 
 **Rviz Configurations:**
+
+**Cfg Files:**
+
+&#128994; `cfg/gripper_control.yaml`: multiple variable configuration for the gripper
+
+&#128994; `navigator.cfg`: python script to generate dynamic parameter reconfigure for
+navigator
 
 ***Files From HW***
 

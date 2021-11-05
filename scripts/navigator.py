@@ -7,7 +7,7 @@ from std_msgs.msg import String
 import tf
 import numpy as np
 from numpy import linalg
-from utils import wrapToPi
+from utils.utils import wrapToPi
 from planners import AStar, compute_smoothed_traj
 from grids import StochOccupancyGrid2D
 import scipy.interpolate
