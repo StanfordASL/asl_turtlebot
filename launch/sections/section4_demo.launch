@@ -1,26 +1,12 @@
 <launch>
-  <arg name="model" default="burger" doc="model type [burger, waffle]"/>
-  <arg name="x_pos" default="0.0"/>
-  <arg name="y_pos" default="0.0"/>
-  <arg name="z_pos" default="0.0"/>
-  <arg name="gui" default="true"/> 
-
-
-  <rosparam param="sim">true</rosparam>
-  <rosparam param="map">true</rosparam>
-  <rosparam param="use_tf">false</rosparam>
-  <rosparam param="rviz">true</rosparam>
-
-  <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_world.launch"></include>
-
-  <param name="robot_description" command="$(find xacro)/xacro $(find asl_turtlebot)/urdf/turtlebot3_$(arg model).urdf.xacro" />
-
-  <!-- <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model turtlebot3_burger -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -param robot_description" /> -->
-
-  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
-    <param name="publish_frequency" type="double" value="10.0" />
-  </node>
-
-  <include file="$(find asl_turtlebot)/launch/config/gmapping_config.launch" />
-
+  <include file="$(find asl_turtlebot)/launch/root.launch">
+    <arg name="world" default=""/>
+    <arg name="x_pos" default="0.0"/>
+    <arg name="y_pos" default="0.0"/>
+    <arg name="z_pos" default="0.0"/>
+    <arg name="rviz" default="section4_demo"/>
+    <!-- we're going to let turtlebot3 setup the sim -->
+    <arg name="sim" default="false"/> 
+  </include>
+  <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_world.launch" />
 </launch>
