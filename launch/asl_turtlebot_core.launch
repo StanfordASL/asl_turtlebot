@@ -1,0 +1,33 @@
+<launch>
+  <include file="$(find turtlebot3_bringup)/launch/turtlebot3_core.launch" />
+  <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch" />
+
+  <machine name="pi" address="$(env PI_HOSTNAME)" env-loader="~/catkin_ws/devel/env_pi.sh" user="aa274" password="aa274" />
+
+  <node pkg="topic_tools" type="throttle" name="velodyne_throttler" args="messages /velodyne_points 3" />
+
+  <node machine="pi" type="raspicam_node" pkg="raspicam_node" name="raspicam_node" output="screen">
+    <param name="camera_info_url" value="package://raspicam_node/camera_info/camerav2_410x308.yaml"/>
+    <param name="width" value="410"/>
+    <param name="height" value="308"/>
+
+    <param name="framerate" value="30"/>
+    <param name="exposure_mode" value="antishake"/>
+    <param name="shutter_speed" value="0"/>
+
+    <param name="camera_frame_id" value="raspicam"/>
+  </node>
+
+  <node pkg="asl_turtlebot" type="camera_transform_relay.py" name="camera_relay"/>
+  <node pkg="asl_turtlebot" type="goal_commander.py" name="goal_commander" />
+  <!-- <node pkg="asl_turtlebot" type="detector_mobilenet.py" name="turtlebot_detector" respawn="true"/> -->
+
+  <!-- gmapping -->
+  <include file="$(find asl_turtlebot)/launch/config/gmapping_config.launch" />
+
+  <!-- x: -180, y: -90 -->
+  <node pkg="tf" type="static_transform_publisher" name="camera_true_broadcaster" args="0.03 0 0.067 0.707107 0 0.707107 0 base_footprint raspicam 100" />
+  <node pkg="tf" type="static_transform_publisher" name="camera_broadcaster" args="0 0 0 0 0 0.707107 0.707107 raspicam camera 100" />
+  <node pkg="tf" type="static_transform_publisher" name="velodyne_broadcaster" args="0.0175 0 0.215 0 0 0 1 base_footprint velodyne 100" />
+  
+</launch>

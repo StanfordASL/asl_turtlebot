@@ -1,0 +1,13 @@
+<launch>
+  <include file="$(find asl_turtlebot)/launch/root.launch">
+    <arg name="world" value="arena" />
+    <arg name="gmapping" value="false" />
+    <arg name="x_pos" value="1.0" />
+    <arg name="y_pos" value="-0.5" />
+    <arg name="z_pos" value="-1.5" />
+    <arg name="model" value="asl_turtlebot_hw4_arena" />
+    <arg name="rviz" value="hw4_arena" />
+  </include>
+
+  <node pkg="asl_turtlebot" type="ekf_slam.py" name="ekf_slam" output="screen" launch-prefix="bash -c 'sleep 1.0; $0 $@' " />
+</launch>
