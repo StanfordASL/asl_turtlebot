@@ -13,7 +13,8 @@
     <arg name="rviz" value="hw4_maze" />
   </include>
 
-  <param name="mc" type="bool" value="$(arg mc)" />
-  <param name="num_particles" type="int" value="$(arg num_particles)" />
-  <node pkg="asl_turtlebot" type="localization.py" name="localization" output="screen" launch-prefix="bash -c 'sleep 1.0; $0 $@' " />
+  <node pkg="asl_turtlebot" type="localization.py" name="localization" output="screen" launch-prefix="bash -c 'sleep 1.0; $0 $@' ">
+    <param name="/mc" type="bool" value="$(arg mc)" />
+    <param name="/num_particles" type="int" value="$(arg num_particles)" />
+  </node>
 </launch>
