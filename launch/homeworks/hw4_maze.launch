@@ -5,6 +5,7 @@
 
   <include file="$(find asl_turtlebot)/launch/root.launch">
     <arg name="world" value="maze" />
+    <arg name="gmapping" value="false" />
     <arg name="x_pos" value="1.0" />
     <arg name="y_pos" value="-0.5" />
     <arg name="z_pos" value="-1.5" />

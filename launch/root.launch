@@ -1,6 +1,7 @@
 <launch> 
   <arg name="sim" default="true" /> 
   <arg name="gui" default="true" /> 
+  <arg name="gmapping" default="true" /> 
   <arg name="rviz" default="" /> 
   <arg name="world" default="" /> 
   <arg name="detector" default="" /> 
@@ -35,14 +36,15 @@
       <arg name="debug" value="false"/>
       <arg name="gui" value="$(arg gui)"/>
     </include>
-    <node pkg="asl_turtlebot" type="gazebo_plot.py" name="gazebo_plot" />
 
     <!-- ########### spawn the robot in simulation ################# -->
     <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model turtlebot3_burger -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -param robot_description" />
   </group>
 
   <!-- ###################### launch the configured gmapping ############## -->
-  <include file="$(find asl_turtlebot)/launch/config/gmapping_config.launch" />
+  <group if="$(arg gmapping)">
+    <include file="$(find asl_turtlebot)/launch/config/gmapping_config.launch" />
+  </group>
 
   <!-- ################ unconditonally useful scripts ##################### -->
   <node pkg="asl_turtlebot" type="goal_commander.py" name="goal_commander" />
