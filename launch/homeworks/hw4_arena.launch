@@ -9,5 +9,5 @@
     <arg name="rviz" value="hw4_arena" />
   </include>
 
-  <node pkg="asl_turtlebot" type="ekf_slam.py" name="ekf_slam" output="screen" />
+  <node pkg="asl_turtlebot" type="ekf_slam.py" name="ekf_slam" output="screen" launch-prefix="bash -c 'sleep 1.0; $0 $@' " />
 </launch>
