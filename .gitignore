@@ -1,2 +1,11 @@
 .DS_Store
 *.pyc
+
+scripts/controllers/*
+scripts/HW*/*
+scripts/planners/P1_astar.py
+scripts/controllers/P1_differential_flatness.py
+scripts/controllers/P2_pose_stabilization.py
+scripts/controllers/P3_trajectory_tracking.py
+scripts/controllers/P4_optimal_control.py
+scripts/**/*_soln.py

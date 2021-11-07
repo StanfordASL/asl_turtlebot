@@ -1,0 +1,16 @@
+<launch>
+  <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_world.launch" />
+
+  <include file="$(find asl_turtlebot)/launch/root.launch">
+    <arg name="detector" default="detector.py"/>
+    <arg name="x_pos" default="0.0"/>
+    <arg name="y_pos" default="0.0"/>
+    <arg name="z_pos" default="0.0"/>
+    <!-- we let turtlebot3 world handle simulation -->
+    <arg name="sim" default="false"/>
+    <arg name="world" default=""/>
+    <arg name="publish_state" default="false"/>
+    <arg name="rviz" default="signs"/>
+  </include>
+
+</launch>
