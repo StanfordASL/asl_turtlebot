@@ -1,0 +1,10 @@
+<launch>
+  <include file="$(find asl_turtlebot)/launch/root.launch">
+    <arg name="x_pos" default="0.0" />
+    <arg name="y_pos" default="0.0" />
+    <arg name="z_pos" default="0.0" />
+    <arg name="rviz" default="signs" />
+    <arg name="world" default="signs" />
+    <arg name="detector" default="detector.py" />
+  </include>
+</launch>

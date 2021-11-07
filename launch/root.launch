@@ -5,6 +5,7 @@
   <arg name="world" default="" /> 
   <arg name="detector" default="" /> 
   <arg name="navigator" default="" /> 
+  <arg name="publish_state" default="true" /> 
   <arg name="x_pos" default="0.0" />
   <arg name="y_pos" default="0.0" />
   <arg name="z_pos" default="0.0" />
@@ -18,9 +19,11 @@
   <param name="robot_description" command="$(find xacro)/xacro $(find asl_turtlebot)/urdf/$(arg model).urdf.xacro" if="$(eval '/' not in model)" />
   <param name="robot_description" command="$(find xacro)/xacro $(arg model)" unless="$(eval '/' not in model)" />
 
-  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
-    <param name="publish_frequency" type="double" value="30.0" />
-  </node>
+  <group if="$(arg publish_state)" >
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+      <param name="publish_frequency" type="double" value="30.0" />
+    </node>
+  </group>
 
   <!-- ###################### launch simulation if specified ############## -->
   <group if="$(arg sim)">

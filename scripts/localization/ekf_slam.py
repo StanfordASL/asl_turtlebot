@@ -142,13 +142,14 @@ class EKF_SLAM_Visualizer:
         self.ground_truth_ct = self.ground_truth_ct + 1
         # `rostopic hz /gazebo/model_states` = 1000; let's broadcast the transform at 20Hz to reduce lag
         if self.ground_truth_ct % 50 == 0:
-            self.latest_pose_time = rospy.Time.now()
-            self.latest_pose = msg.pose[msg.name.index("turtlebot3_burger")]
-            self.tfBroadcaster.sendTransform(create_transform_msg(
-                (self.latest_pose.position.x, self.latest_pose.position.y, 0),
-                (self.latest_pose.orientation.x, self.latest_pose.orientation.y, self.latest_pose.orientation.z, self.latest_pose.orientation.w),
-                "base_footprint", "world", self.latest_pose_time)
-            )
+            if "turtlebot3_burger" in msg.name:
+                self.latest_pose_time = rospy.Time.now()
+                self.latest_pose = msg.pose[msg.name.index("turtlebot3_burger")]
+                self.tfBroadcaster.sendTransform(create_transform_msg(
+                    (self.latest_pose.position.x, self.latest_pose.position.y, 0),
+                    (self.latest_pose.orientation.x, self.latest_pose.orientation.y, self.latest_pose.orientation.z, self.latest_pose.orientation.w),
+                    "base_footprint", "world", self.latest_pose_time)
+                )
 
     def run(self):
         rate = rospy.Rate(100)

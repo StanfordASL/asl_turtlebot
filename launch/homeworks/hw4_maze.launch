@@ -1,4 +1,8 @@
 <launch>
+  <!-- controllable args for versions of localization -->
+  <arg name="mc" default="false" />
+  <arg name="num_particles" default="1000" />
+
   <include file="$(find asl_turtlebot)/launch/root.launch">
     <arg name="world" value="maze" />
     <arg name="x_pos" value="1.0" />
@@ -8,5 +12,7 @@
     <arg name="rviz" value="hw4_maze" />
   </include>
 
+  <param name="mc" type="bool" value="$(arg mc)" />
+  <param name="num_particles" type="int" value="$(arg num_particles)" />
   <node pkg="asl_turtlebot" type="localization.py" name="localization" output="screen" />
 </launch>

@@ -71,7 +71,10 @@ class GazeboPlot:
             self.path.set_ydata(self.y)
             self.speed.set_ydata(self.v)
             self.lock.release()
-            self.fig.canvas.draw()
+            #self.fig.canvas.draw()
+            #plt.pause(1e-2)
+            self.fig.canvas.draw_idle()
+            self.fig.canvas.start_event_loop(1e-2)
             rate.sleep()
 
 if __name__ == '__main__':

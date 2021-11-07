@@ -9,5 +9,5 @@
     <arg name="sim" default="true"/>
   </include>
 
-  <node pkg="asl_turtlebot" type="navigator_soln.py" name="navigator" output="screen" />
+  <node pkg="asl_turtlebot" type="navigator.py" name="navigator" output="screen" />
 </launch>
