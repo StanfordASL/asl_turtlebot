@@ -5,7 +5,8 @@ import os
 
 # watch out on the order for the next two imports lol
 from tf import TransformListener
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 import numpy as np
 from sensor_msgs.msg import CompressedImage, Image, CameraInfo, LaserScan
 from asl_turtlebot.msg import DetectedObject, DetectedObjectList
@@ -100,21 +101,14 @@ class Detector:
 
         self.tf_listener = TransformListener()
         rospy.Subscriber(
-            "/raspicam_node/image_raw",
-            Image,
-            self.camera_callback,
-            queue_size=1,
-            buff_size=2 ** 24,
-        )
-        rospy.Subscriber(
-            "/raspicam_node/image/compressed",
+            "/camera_relay/image/compressed",
             CompressedImage,
             self.compressed_camera_callback,
             queue_size=1,
             buff_size=2 ** 24,
         )
         rospy.Subscriber(
-            "/raspicam_node/camera_info", CameraInfo, self.camera_info_callback
+            "/camera_relay/camera_info", CameraInfo, self.camera_info_callback
         )
         rospy.Subscriber("/scan", LaserScan, self.laser_callback)
 
@@ -175,7 +169,7 @@ class Detector:
         f_scores, f_boxes, f_classes = [], [], []
         f_num = 0
 
-        for i in range(num):
+        for i in range(int(num)):
             if scores[i] >= MIN_SCORE:
                 f_scores.append(scores[i])
                 f_boxes.append(boxes[i])
@@ -305,7 +299,7 @@ class Detector:
                     thetaleft, thetaright, img_laser_ranges
                 )
 
-                if not self.object_publishers.has_key(cl):
+                if not cl in self.object_publishers:
                     self.object_publishers[cl] = rospy.Publisher(
                         "/detector/" + self.object_labels[cl],
                         DetectedObject,
