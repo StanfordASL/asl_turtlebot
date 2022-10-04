@@ -333,10 +333,13 @@ class Detector:
         the focal lengths. Stores the result in the class itself as self.cx, self.cy,
         self.fx and self.fy"""
 
-        self.cx = msg.P[2]
-        self.cy = msg.P[6]
-        self.fx = msg.P[0]
-        self.fy = msg.P[5]
+        if any(msg.P):
+            self.cx = msg.P[2]
+            self.cy = msg.P[6]
+            self.fx = msg.P[0]
+            self.fy = msg.P[5]
+        else:
+            rospy.loginfo("`CameraInfo` message seems to be invalid; ignoring it.")
 
     def laser_callback(self, msg):
         """callback for thr laser rangefinder"""

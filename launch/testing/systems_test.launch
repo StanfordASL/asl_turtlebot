@@ -11,6 +11,8 @@
     <param name="pixel_format" value="yuyv" />
     <param name="io_method" value="mmap" />
     <param name="camera_frame_id" value="camera" />
+    <param name="camera_info_url" value="file://$(find asl_turtlebot)/camera_config/logitech_c270.yaml" />
+    <param name="camera_name" value="camera" />
   </node>
   <node pkg="topic_tools" type="throttle" name="camera_throttler" args="messages /camera/image_raw/compressed 5" />
 

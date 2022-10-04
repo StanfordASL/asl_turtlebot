@@ -1,0 +1,5 @@
+<launch>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find asl_turtlebot)/rviz/systems_test.rviz"/>
+    <node pkg="asl_turtlebot" type="keyboard_teleop.py" name="keyboard_teleop" output="screen" />
+    <node pkg="asl_turtlebot" type="detector_viz.py" name="detector_viz" />
+</launch>
