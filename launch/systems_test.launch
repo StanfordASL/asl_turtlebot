@@ -14,8 +14,6 @@
   </node>
   <node pkg="topic_tools" type="throttle" name="camera_throttler" args="messages /camera/image_raw/compressed 5" />
 
-  <node pkg="asl_turtlebot" type="goal_commander.py" name="goal_commander" />
-
   <node pkg="asl_turtlebot" type="detector_mobilenet.py" name="turtlebot_detector" respawn="true"/>
 
   <include file="$(find asl_turtlebot)/launch/config/gmapping_config.launch" />
