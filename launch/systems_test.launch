@@ -1,0 +1,27 @@
+<launch>
+  <include file="$(find turtlebot3_bringup)/launch/turtlebot3_core.launch" />
+  <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch" />
+
+  <node pkg="topic_tools" type="throttle" name="velodyne_throttler" args="messages /velodyne_points 3" />
+
+  <node name="camera" pkg="usb_cam" type="usb_cam_node" output="screen">
+    <param name="video_device" value="/dev/video0" />
+    <param name="image_width" value="320" />
+    <param name="image_height" value="240" />
+    <param name="pixel_format" value="yuyv" />
+    <param name="io_method" value="mmap" />
+    <param name="camera_frame_id" value="camera" />
+  </node>
+  <node pkg="topic_tools" type="throttle" name="camera_throttler" args="messages /camera/image_raw/compressed 5" />
+
+  <node pkg="asl_turtlebot" type="goal_commander.py" name="goal_commander" />
+
+  <node pkg="asl_turtlebot" type="detector_mobilenet.py" name="turtlebot_detector" respawn="true"/>
+
+  <include file="$(find asl_turtlebot)/launch/config/gmapping_config.launch" />
+
+  <!-- TODO: update based on final placement of C270 camera -->
+  <node pkg="tf" type="static_transform_publisher" name="camera_broadcaster" args="0.03 0 0.067 0 0 0 1 base_footprint camera 100" />
+  <node pkg="tf" type="static_transform_publisher" name="velodyne_broadcaster" args="0.0175 0 0.215 0 0 0 1 base_footprint velodyne 100" />
+  
+</launch>
