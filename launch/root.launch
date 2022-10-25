@@ -1,12 +1,12 @@
-<launch> 
-  <arg name="sim" default="true" /> 
-  <arg name="gui" default="true" /> 
-  <arg name="gmapping" default="true" /> 
-  <arg name="rviz" default="" /> 
-  <arg name="world" default="" /> 
-  <arg name="detector" default="" /> 
-  <arg name="navigator" default="" /> 
-  <arg name="publish_state" default="true" /> 
+<launch>
+  <arg name="sim" default="true" />
+  <arg name="gui" default="true" />
+  <arg name="gmapping" default="true" />
+  <arg name="rviz" default="" />
+  <arg name="world" default="" />
+  <arg name="detector" default="" />
+  <arg name="navigator" default="" />
+  <arg name="publish_state" default="true" />
   <arg name="x_pos" default="0.0" />
   <arg name="y_pos" default="0.0" />
   <arg name="z_pos" default="0.0" />
@@ -16,7 +16,7 @@
   <rosparam param="rviz" subst_value="true">$(arg rviz)</rosparam>
 
   <!-- ###### launch the robot and possible state publisher ############### -->
-  <arg name="model" default="asl_turtlebot" doc="model type [burger, waffle]"/>
+  <arg name="model" default="asl_turtlebot" doc="model type asl_turtlebot"/>
   <param name="robot_description" command="$(find xacro)/xacro $(find asl_turtlebot)/urdf/$(arg model).urdf.xacro" if="$(eval '/' not in model)" />
   <param name="robot_description" command="$(find xacro)/xacro $(arg model)" unless="$(eval '/' not in model)" />
 
@@ -52,7 +52,7 @@
 
   <!-- ################ conditionally launched scripts #################### -->
   <group if="$(eval len(detector) > 0)">
-    <node pkg="asl_turtlebot" type="$(arg detector)" 
+    <node pkg="asl_turtlebot" type="$(arg detector)"
       name="turtlebot_detector" />
   </group>
   <group if="$(eval len(navigator) > 0)">
