@@ -67,12 +67,12 @@ class Supervisor:
         self.theta = 0
 
         # Goal state
-        self.x_g = 0
-        self.y_g = 0
-        self.theta_g = 0
+        self.x_g = 1.5
+        self.y_g = -4.0
+        self.theta_g = 0.0
 
         # Current mode
-        self.mode = Mode.IDLE
+        self.mode = Mode.NAV
         self.prev_mode = None  # For printing purposes
 
         ########## PUBLISHERS ##########

@@ -1,4 +1,6 @@
 <launch>
+  <arg name="use_tf" default="false"/>
+  <rosparam param="use_tf" subst_value="true">$(arg use_tf)</rosparam>
   <include file="$(find asl_turtlebot)/launch/root.launch">
     <arg name="x_pos" default="0.0" />
     <arg name="y_pos" default="0.0" />
@@ -7,4 +9,6 @@
     <arg name="world" default="signs" />
     <arg name="detector" default="detector.py" />
   </include>
+  <node pkg="asl_turtlebot" type="pose_controller.py" name="turtlebot_pose_controller" />
+  <node pkg="asl_turtlebot" type="gazebo_plot.py" name="gazebo_plot" />
 </launch>
