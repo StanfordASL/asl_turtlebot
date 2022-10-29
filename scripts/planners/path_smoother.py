@@ -24,5 +24,6 @@ def compute_smoothed_traj(path, V_des, k, alpha, dt):
     ########## Code starts here ##########
     raise NotImplementedError # REPLACE THIS FUNCTION WITH YOUR IMPLEMENTATION
     ########## Code ends here ##########
+    traj_smoothed = np.stack([x_d, y_d, theta_d, xd_d, yd_d, xdd_d, ydd_d]).transpose()
 
     return t_smoothed, traj_smoothed
