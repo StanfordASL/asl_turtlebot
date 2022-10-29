@@ -83,6 +83,7 @@ class Navigator:
 
         # trajectory smoothing
         self.spline_alpha = 0.15
+        self.spline_deg = 3  # cubic spline
         self.traj_dt = 0.1
 
         # trajectory tracking controller parameters
@@ -344,7 +345,7 @@ class Navigator:
 
         # Smooth and generate a trajectory
         traj_new, t_new = compute_smoothed_traj(
-            planned_path, self.v_des, self.spline_alpha, self.traj_dt
+            planned_path, self.v_des, self.spline_deg, self.spline_alpha, self.traj_dt
         )
 
         # If currently tracking a trajectory, check whether new trajectory will take more time to follow
