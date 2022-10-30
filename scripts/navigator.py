@@ -340,11 +340,12 @@ class Navigator:
         # Check whether path is too short
         if len(planned_path) < 4:
             rospy.loginfo("Path too short to track")
+            self.pose_controller.load_goal(self.x_g, self.y_g, self.theta_g)
             self.switch_mode(Mode.PARK)
             return
 
         # Smooth and generate a trajectory
-        traj_new, t_new = compute_smoothed_traj(
+        t_new, traj_new = compute_smoothed_traj(
             planned_path, self.v_des, self.spline_deg, self.spline_alpha, self.traj_dt
         )
 

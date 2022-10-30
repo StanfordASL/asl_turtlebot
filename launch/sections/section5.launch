@@ -9,7 +9,6 @@
     <arg name="rviz" default="section4"/>
     <arg name="model" default="asl_turtlebot"/>
     <arg name="sim" default="$(arg sim)"/>
+    <arg name="navigator" default="navigator.py"/>
   </include>
-
-  <node pkg="asl_turtlebot" type="navigator.py" name="navigator" output="screen" />
 </launch>
