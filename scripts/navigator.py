@@ -142,6 +142,7 @@ class Navigator:
             or data.y != self.y_g
             or data.theta != self.theta_g
         ):
+            rospy.logdebug(f"New command nav received:\n{data}")
             self.x_g = data.x
             self.y_g = data.y
             self.theta_g = data.theta
@@ -173,7 +174,7 @@ class Navigator:
                 self.map_height,
                 self.map_origin[0],
                 self.map_origin[1],
-                8,
+                7,
                 self.map_probs,
             )
             if self.x_g is not None:
