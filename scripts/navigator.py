@@ -83,6 +83,7 @@ class Navigator:
 
         # trajectory smoothing
         self.spline_alpha = 0.15
+        self.spline_deg = 3  # cubic spline
         self.traj_dt = 0.1
 
         # trajectory tracking controller parameters
@@ -141,6 +142,7 @@ class Navigator:
             or data.y != self.y_g
             or data.theta != self.theta_g
         ):
+            rospy.logdebug(f"New command nav received:\n{data}")
             self.x_g = data.x
             self.y_g = data.y
             self.theta_g = data.theta
@@ -172,7 +174,7 @@ class Navigator:
                 self.map_height,
                 self.map_origin[0],
                 self.map_origin[1],
-                8,
+                7,
                 self.map_probs,
             )
             if self.x_g is not None:
@@ -339,12 +341,13 @@ class Navigator:
         # Check whether path is too short
         if len(planned_path) < 4:
             rospy.loginfo("Path too short to track")
+            self.pose_controller.load_goal(self.x_g, self.y_g, self.theta_g)
             self.switch_mode(Mode.PARK)
             return
 
         # Smooth and generate a trajectory
-        traj_new, t_new = compute_smoothed_traj(
-            planned_path, self.v_des, self.spline_alpha, self.traj_dt
+        t_new, traj_new = compute_smoothed_traj(
+            planned_path, self.v_des, self.spline_deg, self.spline_alpha, self.traj_dt
         )
 
         # If currently tracking a trajectory, check whether new trajectory will take more time to follow

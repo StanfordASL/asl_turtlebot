@@ -39,7 +39,7 @@ class StochOccupancyGrid2D(object):
         self.height = height
         self.origin_x = origin_x
         self.origin_y = origin_y
-        self.probs = probs
+        self.probs = np.reshape(np.asarray(probs), (height, width))
         self.window_size = window_size
         self.thresh = thresh
 
@@ -49,28 +49,32 @@ class StochOccupancyGrid2D(object):
     def is_free(self, state):
         # combine the probabilities of each cell by assuming independence
         # of each estimation
-        p_total = 1.0
-        lower = -int(round((self.window_size-1)/2))
-        upper = int(round((self.window_size-1)/2))
-        for dx in range(lower,upper+1):
-            for dy in range(lower,upper+1):
-                x, y = self.snap_to_grid([state[0] + dx * self.resolution, state[1] + dy * self.resolution])
-                grid_x = int((x - self.origin_x) / self.resolution)
-                grid_y = int((y - self.origin_y) / self.resolution)
-                if grid_y>0 and grid_x>0 and grid_x<self.width and grid_y<self.height:
-                    p_total *= (1.0-max(0.0,float(self.probs[grid_y * self.width + grid_x])/100.0))
-        return (1.0-p_total) < self.thresh
+        x, y = self.snap_to_grid(state)
+        grid_x = int((x - self.origin_x) / self.resolution)
+        grid_y = int((y - self.origin_y) / self.resolution)
+
+        half_size = int(round((self.window_size-1)/2))
+        grid_x_lower = max(0, grid_x - half_size)
+        grid_y_lower = max(0, grid_y - half_size)
+        grid_x_upper = min(self.width, grid_x + half_size + 1)
+        grid_y_upper = min(self.height, grid_y + half_size + 1)
+
+        prob_window = self.probs[grid_y_lower:grid_y_upper, grid_x_lower:grid_x_upper]
+        p_total = np.prod(1. - np.maximum(prob_window / 100., 0.))
+
+        return (1. - p_total) < self.thresh
 
     def plot(self, fig_num=0):
         fig = plt.figure(fig_num)
         pts = []
-        for i in range(len(self.probs)):
-            # convert i to (x,y)
-            gy = int(i/self.width)
-            gx = i % self.width
-            x = gx * self.resolution + self.origin_x
-            y = gy * self.resolution + self.origin_y
-            if not self.is_free((x,y)):
-                pts.append((x,y))
+        for i in range(self.probs.shape[0]):
+            for j in range(self.probs.shape[1]):
+                # convert i to (x,y)
+                x = j * self.resolution + self.origin_x
+                y = i * self.resolution + self.origin_y
+                if not self.is_free((x,y)):
+                    pts.append((x,y))
         pts_array = np.array(pts)
         plt.scatter(pts_array[:,0],pts_array[:,1],color="red",zorder=15,label='planning resolution')
+        plt.xlim([self.origin_x, self.width * self.resolution + self.origin_x])
+        plt.ylim([self.origin_y, self.height * self.resolution + self.origin_y])

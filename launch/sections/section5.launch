@@ -6,10 +6,8 @@
     <arg name="x_pos" default="3.15"/>
     <arg name="y_pos" default="1.6"/>
     <arg name="z_pos" default="0.0"/>
-    <arg name="rviz" default="section4"/>
     <arg name="model" default="asl_turtlebot"/>
     <arg name="sim" default="$(arg sim)"/>
+    <arg name="navigator" default="navigator.py"/>
   </include>
-
-  <node pkg="asl_turtlebot" type="navigator.py" name="navigator" output="screen" />
 </launch>
