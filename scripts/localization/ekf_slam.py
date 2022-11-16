@@ -211,7 +211,7 @@ class EKF_SLAM_Visualizer:
                                                 LineExtractionParams,
                                                 NoiseParams["var_theta"],
                                                 NoiseParams["var_rho"])
-            Z = np.vstack((alpha, r))
+            Z = np.vstack((alpha, r)).T
             self.EKF.measurement_update(Z, C_AR)
             while len(self.scans) > 1:    # keep only the last element in the queue, if we're falling behind
                 self.scans.popleft()

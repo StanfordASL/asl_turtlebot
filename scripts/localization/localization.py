@@ -150,12 +150,12 @@ class LocalizationVisualizer:
             self.EKF = MonteCarloLocalization(x0s, 10. * NoiseParams["R"],
                                               MapParams, self.base_to_camera, NoiseParams["g"])
             self.OLC = EkfLocalization(x0, NoiseParams["Sigma0"], NoiseParams["R"],
-                                       MapParams, self.base_to_camera, NoiseParams["g"])
+                                       MapParams.T, self.base_to_camera, NoiseParams["g"])
         else:
             self.EKF = EkfLocalization(x0, NoiseParams["Sigma0"], NoiseParams["R"],
-                                       MapParams, self.base_to_camera, NoiseParams["g"])
+                                       MapParams.T, self.base_to_camera, NoiseParams["g"])
             self.OLC = EkfLocalization(x0, NoiseParams["Sigma0"], NoiseParams["R"],
-                                       MapParams, self.base_to_camera, NoiseParams["g"])
+                                       MapParams.T, self.base_to_camera, NoiseParams["g"])
 
         while True:
             if not self.scans:
@@ -205,7 +205,7 @@ class LocalizationVisualizer:
                                                 LineExtractionParams,
                                                 NoiseParams["var_theta"],
                                                 NoiseParams["var_rho"])
-            Z = np.vstack((alpha, r))
+            Z = np.vstack((alpha, r)).T
             self.EKF.measurement_update(Z, C_AR)
 
             if self.params.mc:
