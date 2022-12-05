@@ -18,10 +18,6 @@ import cv2
 import math
 
 # path to the trained conv net
-PATH_TO_MODEL = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)),
-    "../../tfmodels/ssd_mobilenet_v1_coco.pb",
-)
 PATH_TO_LABELS = os.path.join(
     os.path.dirname(os.path.realpath(__file__)),
     "../../tfmodels/coco_labels.txt",
@@ -29,7 +25,7 @@ PATH_TO_LABELS = os.path.join(
 
 # set to True to use tensorflow and a conv net
 # False will use a very simple color thresholding to detect stop signs only
-USE_TF = True
+USE_PYTORCH = True
 # minimum score for positive detection
 MIN_SCORE = 0.5
 
@@ -62,11 +58,12 @@ class Detector:
         self.detected_objects_pub = rospy.Publisher(
             "/detector/objects", DetectedObjectList, queue_size=10
         )
-        if USE_TF:
+        if USE_PYTORCH:
             weights = SSDLite320_MobileNet_V3_Large_Weights.DEFAULT
             self.model = torchvision.models.detection.ssdlite320_mobilenet_v3_large(weights=weights, box_score_thresh=0.5)
             self.model.eval()
-            self.model.cuda()
+            if torch.cuda.is_available():
+                self.model.cuda()
             self.preprocess = weights.transforms()
 
         # camera and laser parameters that get updated
@@ -80,7 +77,6 @@ class Detector:
         self.object_publishers = {}
         self.object_labels = load_object_labels(PATH_TO_LABELS)
 
-        # self.tf_listener = TransformListener()
         rospy.Subscriber(
             "/camera/image_raw/compressed",
             CompressedImage,
@@ -97,14 +93,16 @@ class Detector:
         """runs a detection method in a given image"""
 
         image_np = self.load_image_into_numpy_array(img)
-        # image_np_expanded = np.expand_dims(image_np, axis=0)
 
-        if USE_TF:
+        if USE_PYTORCH:
             # uses MobileNet to detect objects in images
             # this works well in the real world, but requires
             # good computational resources
             with torch.no_grad():
-                batch = [self.preprocess(torch.from_numpy(image_np).permute(2,0,1).cuda())]
+                if torch.cuda.is_available():
+                    batch = [self.preprocess(torch.from_numpy(image_np).permute(2,0,1).cuda())]
+                else:
+                    batch = [self.preprocess(torch.from_numpy(image_np).permute(2,0,1))]
                 prediction = self.model(batch)[0]
                 boxes = prediction["boxes"].cpu().numpy()
                 scores = prediction["scores"].cpu().numpy()
