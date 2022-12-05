@@ -4,9 +4,12 @@ import rospy
 import os
 
 # watch out on the order for the next two imports lol
-from tf import TransformListener
-import tensorflow.compat.v1 as tf
-tf.disable_v2_behavior()
+# from tf import TransformListener
+# import tensorflow.compat.v1 as tf
+# tf.disable_v2_behavior()
+import torch
+import torchvision
+from torchvision.models.detection import SSDLite320_MobileNet_V3_Large_Weights
 import numpy as np
 from sensor_msgs.msg import CompressedImage, Image, CameraInfo, LaserScan
 from asl_turtlebot.msg import DetectedObject, DetectedObjectList
@@ -15,10 +18,6 @@ import cv2
 import math
 
 # path to the trained conv net
-PATH_TO_MODEL = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)),
-    "../../tfmodels/ssd_mobilenet_v1_coco.pb",
-)
 PATH_TO_LABELS = os.path.join(
     os.path.dirname(os.path.realpath(__file__)),
     "../../tfmodels/coco_labels.txt",
@@ -26,7 +25,7 @@ PATH_TO_LABELS = os.path.join(
 
 # set to True to use tensorflow and a conv net
 # False will use a very simple color thresholding to detect stop signs only
-USE_TF = True
+USE_PYTORCH = True
 # minimum score for positive detection
 MIN_SCORE = 0.5
 
@@ -59,34 +58,13 @@ class Detector:
         self.detected_objects_pub = rospy.Publisher(
             "/detector/objects", DetectedObjectList, queue_size=10
         )
-
-        if USE_TF:
-            self.detection_graph = tf.Graph()
-            with self.detection_graph.as_default():
-                od_graph_def = tf.GraphDef()
-                with tf.gfile.GFile(PATH_TO_MODEL, "rb") as fid:
-                    serialized_graph = fid.read()
-                    od_graph_def.ParseFromString(serialized_graph)
-                    tf.import_graph_def(od_graph_def, name="")
-                self.image_tensor = self.detection_graph.get_tensor_by_name(
-                    "image_tensor:0"
-                )
-                self.d_boxes = self.detection_graph.get_tensor_by_name(
-                    "detection_boxes:0"
-                )
-                self.d_scores = self.detection_graph.get_tensor_by_name(
-                    "detection_scores:0"
-                )
-                self.d_classes = self.detection_graph.get_tensor_by_name(
-                    "detection_classes:0"
-                )
-                self.num_d = self.detection_graph.get_tensor_by_name(
-                    "num_detections:0"
-                )
-                config = tf.ConfigProto()
-                config.gpu_options.allow_growth = True
-            self.sess = tf.Session(graph=self.detection_graph, config=config)
-            # self.sess = tf.Session(graph=self.detection_graph)
+        if USE_PYTORCH:
+            weights = SSDLite320_MobileNet_V3_Large_Weights.DEFAULT
+            self.model = torchvision.models.detection.ssdlite320_mobilenet_v3_large(weights=weights, box_score_thresh=0.5)
+            self.model.eval()
+            if torch.cuda.is_available():
+                self.model.cuda()
+            self.preprocess = weights.transforms()
 
         # camera and laser parameters that get updated
         self.cx = 0.0
@@ -99,7 +77,6 @@ class Detector:
         self.object_publishers = {}
         self.object_labels = load_object_labels(PATH_TO_LABELS)
 
-        self.tf_listener = TransformListener()
         rospy.Subscriber(
             "/camera/image_raw/compressed",
             CompressedImage,
@@ -116,19 +93,21 @@ class Detector:
         """runs a detection method in a given image"""
 
         image_np = self.load_image_into_numpy_array(img)
-        image_np_expanded = np.expand_dims(image_np, axis=0)
 
-        if USE_TF:
+        if USE_PYTORCH:
             # uses MobileNet to detect objects in images
             # this works well in the real world, but requires
             # good computational resources
-            with self.detection_graph.as_default():
-                (boxes, scores, classes, num) = self.sess.run(
-                    [self.d_boxes, self.d_scores, self.d_classes, self.num_d],
-                    feed_dict={self.image_tensor: image_np_expanded},
-                )
-
-            return self.filter(boxes[0], scores[0], classes[0], num[0])
+            with torch.no_grad():
+                if torch.cuda.is_available():
+                    batch = [self.preprocess(torch.from_numpy(image_np).permute(2,0,1).cuda())]
+                else:
+                    batch = [self.preprocess(torch.from_numpy(image_np).permute(2,0,1))]
+                prediction = self.model(batch)[0]
+                boxes = prediction["boxes"].cpu().numpy()
+                scores = prediction["scores"].cpu().numpy()
+                classes = prediction["labels"].cpu().numpy()
+            return self.filter(boxes, scores, classes, classes.shape[0])
 
         else:
             # uses a simple color threshold to detect stop signs
@@ -261,7 +240,6 @@ class Detector:
 
     def camera_common(self, img_laser_ranges, img, img_bgr8):
         (img_h, img_w, img_c) = img.shape
-
         # runs object detection in the image
         (boxes, scores, classes, num) = self.run_detection(img)
 
@@ -271,10 +249,10 @@ class Detector:
 
             # some objects were detected
             for (box, sc, cl) in zip(boxes, scores, classes):
-                ymin = int(box[0] * img_h)
-                xmin = int(box[1] * img_w)
-                ymax = int(box[2] * img_h)
-                xmax = int(box[3] * img_w)
+                ymin = int(box[1])
+                xmin = int(box[0])
+                ymax = int(box[3])
+                xmax = int(box[2])
                 xcen = int(0.5 * (xmax - xmin) + xmin)
                 ycen = int(0.5 * (ymax - ymin) + ymin)
 
@@ -324,8 +302,8 @@ class Detector:
             self.detected_objects_pub.publish(detected_objects)
 
         # displays the camera image
-        # cv2.imshow("Camera", img_bgr8)
-        # cv2.waitKey(1)
+        cv2.imshow("Camera", img_bgr8)
+        cv2.waitKey(1)
 
     def camera_info_callback(self, msg):
         """extracts relevant camera intrinsic parameters from the camera_info message.
